@@ -15,6 +15,8 @@ services:
         value: f05e4ca5135cb1a57585a0658fa9960717208ff956ce265f2991316b23b4ea6c
       - key: DATABASE_URL
         sync: false
+      - key: REDIS_URL
+        sync: false
 
   # 2. The SvelteKit Frontend User Interface
   - type: web
