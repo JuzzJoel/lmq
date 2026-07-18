@@ -1,0 +1,85 @@
+@import "tailwindcss";
+
+@theme {
+  --color-bg-body: #FFFFFF;
+  --color-bg-surface: #FFFFFF;
+  --color-bg-elevated: #FFFFFF;
+  --color-bg-glass: #FFFFFF;
+  --color-bg-hover: #F5F5F5;
+
+  --color-text-primary: #000000;
+  --color-text-secondary: #000000;
+  --color-text-muted: #000000;
+
+  --color-accent: #0055FF;
+  --color-accent-hover: #FFD700;
+  --color-accent-subtle: #0055FF;
+  --color-accent-glow: transparent;
+
+  --color-success: #0055FF;
+  --color-warning: #FFD700;
+  --color-danger: #FF2A2A;
+
+  --color-border-subtle: #000000;
+  --color-border-default: #000000;
+  --color-border-strong: #000000;
+
+  --font-sans: 'Inter', system-ui, -apple-system, sans-serif;
+  --font-mono: 'JetBrains Mono', 'Fira Code', monospace;
+
+  --radius-sm: 0px;
+  --radius-md: 0px;
+  --radius-lg: 0px;
+  --radius-xl: 0px;
+  --radius-full: 0px;
+
+  --shadow-sm: 2px 2px 0px 0px #000000;
+  --shadow-md: 4px 4px 0px 0px #000000;
+  --shadow-lg: 8px 8px 0px 0px #000000;
+  --shadow-glow: none;
+}
+
+/* Base resets */
+*, *::before, *::after {
+  box-sizing: border-box;
+  margin: 0;
+}
+
+html {
+  scroll-behavior: smooth;
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+}
+
+body {
+  font-family: var(--font-sans);
+  background-color: var(--color-bg-body);
+  color: var(--color-text-primary);
+  line-height: 1.6;
+  min-height: 100dvh;
+}
+
+/* Scrollbar styling */
+::-webkit-scrollbar { width: 12px; }
+::-webkit-scrollbar-track { background: var(--color-bg-body); border-left: 2px solid #000; }
+::-webkit-scrollbar-thumb { background: var(--color-accent); border: 2px solid #000; border-radius: 0; }
+
+/* Animations */
+@keyframes slide-up {
+  from { opacity: 0; transform: translateY(20px); }
+  to { opacity: 1; transform: translateY(0); }
+}
+
+.animate-slide-up {
+  animation: slide-up 0.3s ease-out both;
+}
+
+@utility shadow-hard {
+  box-shadow: 4px 4px 0px 0px #000;
+}
+@utility shadow-hard-lg {
+  box-shadow: 8px 8px 0px 0px #000;
+}
+@utility shadow-hard-hover {
+  box-shadow: 2px 2px 0px 0px #000;
+}

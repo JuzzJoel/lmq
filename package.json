@@ -1,0 +1,20 @@
+{
+  "name": "lmq",
+  "version": "1.0.0",
+  "private": true,
+  "description": "LMQ Core — Unified High-Performance URL Shortener",
+  "scripts": {
+    "dev:frontend": "pnpm --filter frontend dev",
+    "dev:backend": "cd backend && go run main.go",
+    "dev": "start pnpm dev:frontend && start pnpm dev:backend",
+    "build:frontend": "pnpm --filter frontend build",
+    "build": "pnpm build:frontend",
+    "check": "pnpm --filter frontend check",
+    "lint": "pnpm --filter frontend lint"
+  },
+  "engines": {
+    "node": ">=20.0.0",
+    "pnpm": ">=9.0.0"
+  },
+  "packageManager": "pnpm@9.15.4"
+}
