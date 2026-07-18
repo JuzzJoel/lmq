@@ -79,24 +79,25 @@
     return await QRCode.toString(url, {
       type: 'svg',
       margin: 1,
+      width: 250,
       color: { dark: '#000000', light: '#ffffff' }
     });
   }
 </script>
 
-<form onsubmit={handleSubmit} class="w-full max-w-2xl mx-auto space-y-4">
-  <div class="flex flex-col md:flex-row gap-2">
+<form onsubmit={handleSubmit} class="w-full max-w-2xl mx-auto space-y-4 group">
+  <div class="flex flex-col md:flex-row gap-2 transition-transform duration-300">
     <input
       type="text"
       bind:value={inputUrlValue}
       placeholder="Enter URL(s) separated by spaces or commas..."
-      class="flex-1 bg-white border-4 border-black rounded-none p-4 text-lg font-mono focus:outline-none shadow-[4px_4px_0px_0px_#000]"
+      class="flex-1 bg-white border-4 border-black rounded-none p-4 text-lg font-mono focus:outline-none shadow-[4px_4px_0px_0px_#000] hover:shadow-[6px_6px_0px_0px_#FF2A2A] hover:-translate-y-1 transition-all duration-200"
       required
     />
     <button
       type="submit"
       disabled={isLoading}
-      class="bg-black text-white rounded-none px-8 py-4 font-mono font-bold text-lg border-4 border-black hover:bg-white hover:text-black shadow-[4px_4px_0px_0px_#ccc] transition-all disabled:opacity-50"
+      class="bg-black text-white rounded-none px-8 py-4 font-mono font-bold text-lg border-4 border-black hover:bg-yellow-400 hover:text-black hover:-translate-y-1 shadow-[4px_4px_0px_0px_#ccc] hover:shadow-[6px_6px_0px_0px_#000] active:translate-y-0 active:shadow-none transition-all duration-200 disabled:opacity-50 cursor-pointer"
     >
       {isLoading ? 'WORKING...' : 'SHORTEN'}
     </button>
@@ -166,8 +167,8 @@
   <div class="max-w-2xl mx-auto mt-6 space-y-4">
     {#each shortenedLinks as link, i}
       {#await getQRSvg(link.short_url) then svg}
-        <div class="bg-white border-4 border-black rounded-none p-4 shadow-[4px_4px_0px_0px_#000] flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
-          <div class="w-32 h-32 shrink-0 border-4 border-black shadow-[2px_2px_0px_0px_#ccc] p-1">
+        <div class="bg-white border-4 border-black rounded-none p-4 shadow-[4px_4px_0px_0px_#000] flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4 hover:shadow-[6px_6px_0px_0px_#FFD700] hover:-translate-y-1 transition-all duration-300">
+          <div class="w-28 h-28 shrink-0 border-4 border-black shadow-[2px_2px_0px_0px_#ccc] p-1 bg-white flex items-center justify-center">
               {@html svg}
           </div>
           <div class="truncate w-full sm:max-w-xs xl:max-w-md ml-0 sm:ml-4 flex-1">

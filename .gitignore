@@ -4,3 +4,10 @@ dist/
 .env
 .svelte-kit/
 backend/main.exe
+node_modules
+deployment.md
+backend/main-linux
+deploy/
+*.env.production
+lmq-deploy.tar.gz
+frontend/build/

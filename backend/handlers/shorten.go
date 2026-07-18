@@ -6,6 +6,7 @@ import (
 	"fmt"
 	"net/http"
 	"net/url"
+	"os"
 	"regexp"
 	"strings"
 	"time"
@@ -82,8 +83,12 @@ func (h *ShortenHandler) HandleShorten(w http.ResponseWriter, r *http.Request) {
 				vurl = "https://" + vurl
 			}
 			mockToken := fmt.Sprintf("mockB62-%d", i)
+			baseURL := os.Getenv("BASE_URL")
+			if baseURL == "" {
+				baseURL = "https://lmq.name.ng"
+			}
 			results = append(results, map[string]interface{}{
-				"short_url":  "http://localhost:8080/" + mockToken,
+				"short_url":  fmt.Sprintf("%s/%s", baseURL, mockToken),
 				"token":      mockToken,
 				"long_url":   vurl,
 				"created_at": time.Now(),
@@ -182,14 +187,11 @@ func (h *ShortenHandler) HandleShorten(w http.ResponseWriter, r *http.Request) {
 		cacheKey := fmt.Sprintf("url:%s", token)
 		h.rdb.Set(context.Background(), cacheKey, link.LongURL, 24*time.Hour)
 
-		shortURL := fmt.Sprintf("/%s", link.Token)
-		if host := r.Host; host != "" {
-			scheme := "https"
-			if r.TLS == nil {
-				scheme = "http"
-			}
-			shortURL = fmt.Sprintf("%s://%s/%s", scheme, host, link.Token)
+		baseURL := os.Getenv("BASE_URL")
+		if baseURL == "" {
+			baseURL = "https://lmq.name.ng"
 		}
+		shortURL := fmt.Sprintf("%s/%s", baseURL, link.Token)
 
 		results = append(results, map[string]interface{}{
 			"token":        link.Token,

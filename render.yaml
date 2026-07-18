@@ -1,0 +1,26 @@
+services:
+  # 1. The High-Performance Go Backend Engine
+  - type: web
+    name: lmq-go-backend
+    env: go
+    buildCommand: cd backend && go build -o main main.go
+    startCommand: cd backend && ./main
+    envVars:
+      - key: PORT
+        value: 8080
+      - key: ALLOWED_ORIGINS
+        value: "https://lmq.name.ng"
+      - key: ADMIN_SECRET_HASH
+        value: f05e4ca5135cb1a57585a0658fa9960717208ff956ce265f2991316b23b4ea6c
+      - key: DATABASE_URL
+        sync: false # You will paste your live Supabase connection string in the Render Dashboard UI
+
+  # 2. The SvelteKit Frontend User Interface
+  - type: web
+    name: lmq-svelte-frontend
+    env: node
+    buildCommand: cd frontend && pnpm install && pnpm build
+    startCommand: cd frontend && node build/index.js
+    envVars:
+      - key: PORT
+        value: 3000

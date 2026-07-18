@@ -76,6 +76,7 @@ func main() {
 	r.Use(appmw.StrictCORSMiddleware())
 
 	r.Route("/api/v1", func(r chi.Router) {
+		r.Get("/docs", handlers.HandleGetDocs)
 		r.With(appmw.LocalRateLimiter()).Post("/shorten", shortenHandler.HandleShorten)
 		r.Post("/verify-password", verifyHandler.HandleVerify)
 		

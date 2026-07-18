@@ -57,6 +57,11 @@ body {
   color: var(--color-text-primary);
   line-height: 1.6;
   min-height: 100dvh;
+  cursor: url('data:image/svg+xml;utf8,<svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24"><rect width="24" height="24" fill="%23000" /><rect x="4" y="4" width="16" height="16" fill="%23FF2A2A" /><rect x="8" y="8" width="8" height="8" fill="%23FFD700" /></svg>') 12 12, crosshair;
+}
+
+button:hover, a:hover {
+  cursor: pointer;
 }
 
 /* Scrollbar styling */
