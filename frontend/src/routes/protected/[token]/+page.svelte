@@ -1,6 +1,7 @@
 <script lang="ts">
   import { page } from '$app/stores';
   import Seo from '$lib/components/Seo.svelte';
+  import { API_BASE } from '$lib/api';
 
   let password = $state('');
   let loading = $state(false);
@@ -19,7 +20,7 @@
     
     try {
       const token = $page.params.token;
-      const res = await fetch('/api/v1/verify-password', {
+      const res = await fetch(`${API_BASE}/verify-password`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ token, password })

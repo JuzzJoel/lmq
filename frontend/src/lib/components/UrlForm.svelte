@@ -1,5 +1,6 @@
 <script lang="ts">
   import { invalidateAll } from '$app/navigation';
+  import { API_BASE } from '$lib/api';
 
   let inputUrlValue = $state('');
   let expiresIn = $state('never');
@@ -22,7 +23,7 @@
     shortenedLinks = [];
 
     try {
-      const res = await fetch('/api/v1/shorten', {
+      const res = await fetch(`${API_BASE}/shorten`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({

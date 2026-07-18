@@ -1,6 +1,7 @@
 import type { APIResponse, Link, LinkAnalytics, ShortenRequest, BulkShortenResponse } from './types';
+import { env } from '$env/dynamic/public';
 
-const API_BASE = '/api/v1';
+export const API_BASE = env.PUBLIC_API_URL || '/api/v1';
 
 /** Creates a shortened URL */
 export async function shortenUrl(request: ShortenRequest): Promise<APIResponse<BulkShortenResponse>> {

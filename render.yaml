@@ -28,3 +28,5 @@ services:
     envVars:
       - key: PORT
         value: 3000
+      - key: PUBLIC_API_URL
+        value: "https://api.lmq.name.ng/api/v1"

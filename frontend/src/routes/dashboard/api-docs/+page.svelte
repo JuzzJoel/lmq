@@ -19,7 +19,7 @@
 
       <div class="bg-gray-100 border-4 border-black p-4 font-mono text-sm">
         <span class="bg-black text-white px-2 py-1 font-bold mr-2">POST</span>
-        <span class="font-bold text-blue-700">https://lmq.name.ng/api/v1/shorten</span>
+        <span class="font-bold text-blue-700">https://api.lmq.name.ng/api/v1/shorten</span>
       </div>
     </section>
 
@@ -64,7 +64,7 @@
       <div class="space-y-2">
         <h4 class="font-bold font-mono text-sm">cURL Example</h4>
         <div class="bg-black text-green-400 p-4 border-4 border-black font-mono text-sm overflow-x-auto">
-<pre><code>curl -X POST https://lmq.name.ng/api/v1/shorten \
+<pre><code>curl -X POST https://api.lmq.name.ng/api/v1/shorten \
   -H "Content-Type: application/json" \
   -d '&lbrace;"url": "https://google.com"&rbrace;'</code></pre>
         </div>
@@ -73,7 +73,7 @@
       <div class="space-y-2">
         <h4 class="font-bold font-mono text-sm">JavaScript (Fetch) Example</h4>
         <div class="bg-black text-green-400 p-4 border-4 border-black font-mono text-sm overflow-x-auto">
-<pre><code>const response = await fetch('https://lmq.name.ng/api/v1/shorten', &lbrace;
+<pre><code>const response = await fetch('https://api.lmq.name.ng/api/v1/shorten', &lbrace;
   method: 'POST',
   headers: &lbrace;
     'Content-Type': 'application/json'
