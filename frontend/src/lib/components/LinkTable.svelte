@@ -135,6 +135,9 @@
               {#if link.routes && link.routes.length > 0}
                  <span title="A/B Testing: {link.routes.length} routes" class="ml-1 text-xs">🔀</span>
               {/if}
+              {#if link.burn_after_reading}
+                 <span title="Burn after reading" class="ml-1 text-xs">☠</span>
+              {/if}
             </td>
             <td class="px-4 py-3 max-w-xs truncate text-black font-mono text-xs border-r border-black font-bold">
               {link.long_url}

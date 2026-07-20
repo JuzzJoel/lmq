@@ -55,9 +55,10 @@ func (h *AnalyticsHandler) HandleGetAnalytics(w http.ResponseWriter, r *http.Req
 	var longURL string
 	var totalClicks int64
 	var routesRaw []byte
+	var isBAR bool
 	err := h.pool.QueryRow(ctx,
-		"SELECT id, long_url, click_count, routes FROM links WHERE token = $1", token,
-	).Scan(&linkID, &longURL, &totalClicks, &routesRaw)
+		"SELECT id, long_url, click_count, routes, is_burn_after_reading FROM links WHERE token = $1", token,
+	).Scan(&linkID, &longURL, &totalClicks, &routesRaw, &isBAR)
 	if err != nil {
 		writeError(w, http.StatusNotFound, "Link not found")
 		return
@@ -181,15 +182,16 @@ func (h *AnalyticsHandler) HandleGetAnalytics(w http.ResponseWriter, r *http.Req
 	}
 
 	analytics := models.LinkAnalytics{
-		Token:         token,
-		LongURL:       longURL,
-		TotalClicks:   totalClicks,
-		ClicksByDay:   clicksByDay,
-		Cities:        cities,
-		Regions:       regions,
-		CountryGroups: countryGroups,
-		Browsers:      browsers,
-		RecentClicks:  recentClicks,
+		Token:            token,
+		LongURL:          longURL,
+		TotalClicks:      totalClicks,
+		ClicksByDay:      clicksByDay,
+		Cities:           cities,
+		Regions:          regions,
+		CountryGroups:    countryGroups,
+		Browsers:         browsers,
+		RecentClicks:     recentClicks,
+		BurnAfterReading: isBAR,
 	}
 	if len(routesRaw) > 0 {
 		json.Unmarshal(routesRaw, &analytics.Routes)
@@ -241,11 +243,9 @@ func (h *AnalyticsHandler) HandleListLinks(w http.ResponseWriter, r *http.Reques
 	}
 
 	var rows pgx.Rows
-	// Note: We need pgx import for pgx.Rows but we can just use the returned rows without defining var rows pgx.Rows.
-	// Let's do it directly.
 	if search != "" {
 		rows, err = h.pool.Query(ctx, `
-			SELECT id, token, long_url, created_at, expires_at, click_count, (password_hash IS NOT NULL), routes
+			SELECT id, token, long_url, created_at, expires_at, click_count, (password_hash IS NOT NULL), routes, is_burn_after_reading
 			FROM links
 			WHERE long_url ILIKE '%' || $1 || '%' OR token ILIKE '%' || $1 || '%'
 			ORDER BY created_at DESC
@@ -253,7 +253,7 @@ func (h *AnalyticsHandler) HandleListLinks(w http.ResponseWriter, r *http.Reques
 		`, search, limit, offset)
 	} else {
 		rows, err = h.pool.Query(ctx, `
-			SELECT id, token, long_url, created_at, expires_at, click_count, (password_hash IS NOT NULL), routes
+			SELECT id, token, long_url, created_at, expires_at, click_count, (password_hash IS NOT NULL), routes, is_burn_after_reading
 			FROM links
 			ORDER BY created_at DESC
 			LIMIT $1 OFFSET $2
@@ -270,10 +270,12 @@ func (h *AnalyticsHandler) HandleListLinks(w http.ResponseWriter, r *http.Reques
 	for rows.Next() {
 		var link models.Link
 		var routesRaw []byte
+		var isBAR bool
 		if scanErr := rows.Scan(
 			&link.ID, &link.Token, &link.LongURL,
-			&link.CreatedAt, &link.ExpiresAt, &link.ClickCount, &link.HasPassword, &routesRaw,
+			&link.CreatedAt, &link.ExpiresAt, &link.ClickCount, &link.HasPassword, &routesRaw, &isBAR,
 		); scanErr == nil {
+			link.BurnAfterReading = isBAR
 			if len(routesRaw) > 0 {
 				json.Unmarshal(routesRaw, &link.Routes)
 			}

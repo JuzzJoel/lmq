@@ -10,9 +10,10 @@ type Link struct {
 	CreatedAt    time.Time  `json:"created_at"`
 	ExpiresAt    *time.Time `json:"expires_at,omitempty"`
 	ClickCount   int64      `json:"click_count"`
-	HasPassword  bool       `json:"has_password"`
-	PasswordHash *string    `json:"-"` // Not exported in JSON
-	Routes       []RouteSpec `json:"routes,omitempty"`
+	HasPassword      bool        `json:"has_password"`
+	PasswordHash     *string     `json:"-"` // Not exported in JSON
+	BurnAfterReading bool        `json:"burn_after_reading"`
+	Routes           []RouteSpec `json:"routes,omitempty"`
 }
 
 // ClickEvent represents an analytics record for a single link visit.
@@ -42,8 +43,9 @@ type ShortenRequest struct {
 	URL         string     `json:"url"`
 	CustomToken string     `json:"custom_token,omitempty"`
 	ExpiresIn   int        `json:"expires_in,omitempty"` // in hours
-	Password    string     `json:"password,omitempty"`
-	Routes      []RouteSpec `json:"routes,omitempty"`
+	Password         string     `json:"password,omitempty"`
+	Routes           []RouteSpec `json:"routes,omitempty"`
+	BurnAfterReading bool        `json:"burn_after_reading,omitempty"`
 }
 
 // APIResponse is a generic response wrapper for API responses.
@@ -63,7 +65,8 @@ type LinkAnalytics struct {
 	CountryGroups []CountryCount `json:"country_groups"`
 	Browsers     []BrowserCount `json:"browsers"`
 	RecentClicks []ClickEvent   `json:"recent_clicks"`
-	Routes       []RouteSpec    `json:"routes,omitempty"`
+	Routes           []RouteSpec `json:"routes,omitempty"`
+	BurnAfterReading bool        `json:"burn_after_reading,omitempty"`
 }
 
 // DayCount represents click counts grouped by day.

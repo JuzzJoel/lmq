@@ -23,7 +23,7 @@ func HandleGetDocs(w http.ResponseWriter, r *http.Request) {
 			{
 				Method:      "POST",
 				Path:        "/api/v1/shorten",
-				Description: "Create one or multiple shortened links. Payload: { url: string, routes?: [{ url: string, weight: int }], expires_in?: int, password?: string, custom_token?: string }",
+				Description: "Create one or multiple shortened links. Payload: { url: string, routes?: [{ url: string, weight: int }], expires_in?: int, password?: string, custom_token?: string, burn_after_reading?: bool }",
 			},
 			{
 				Method:      "POST",

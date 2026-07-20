@@ -118,10 +118,11 @@ func (h *ShortenHandler) HandleShorten(w http.ResponseWriter, r *http.Request) {
 				baseURL = "https://lmq.name.ng"
 			}
 			item := map[string]interface{}{
-				"short_url":  fmt.Sprintf("%s/%s", baseURL, mockToken),
-				"token":      mockToken,
-				"long_url":   vurl,
-				"created_at": time.Now(),
+				"short_url":          fmt.Sprintf("%s/%s", baseURL, mockToken),
+				"token":              mockToken,
+				"long_url":           vurl,
+				"created_at":         time.Now(),
+				"burn_after_reading": req.BurnAfterReading,
 			}
 			if len(req.Routes) > 0 {
 				item["routes"] = req.Routes
@@ -204,7 +205,7 @@ func (h *ShortenHandler) HandleShorten(w http.ResponseWriter, r *http.Request) {
 		}
 
 		var link models.Link
-		var routesJSON string
+		var routesJSON interface{}
 		if len(req.Routes) > 0 {
 			rj, err := json.Marshal(req.Routes)
 			if err != nil {
@@ -216,10 +217,10 @@ func (h *ShortenHandler) HandleShorten(w http.ResponseWriter, r *http.Request) {
 
 		ctx, cancel := context.WithTimeout(r.Context(), 5*time.Second)
 		err = h.pool.QueryRow(ctx, `
-			INSERT INTO links (token, long_url, expires_at, password_hash, routes) 
-			VALUES ($1, $2, $3, $4, $5) 
-			RETURNING id, token, long_url, created_at, expires_at, click_count, (password_hash IS NOT NULL), routes
-		`, token, vurl, expiresAt, passwordHash, routesJSON).Scan(&link.ID, &link.Token, &link.LongURL, &link.CreatedAt, &link.ExpiresAt, &link.ClickCount, &link.HasPassword, &link.Routes)
+			INSERT INTO links (token, long_url, expires_at, password_hash, routes, is_burn_after_reading) 
+			VALUES ($1, $2, $3, $4, $5, $6) 
+			RETURNING id, token, long_url, created_at, expires_at, click_count, (password_hash IS NOT NULL), routes, is_burn_after_reading
+		`, token, vurl, expiresAt, passwordHash, routesJSON, req.BurnAfterReading).Scan(&link.ID, &link.Token, &link.LongURL, &link.CreatedAt, &link.ExpiresAt, &link.ClickCount, &link.HasPassword, &link.Routes, &link.BurnAfterReading)
 		cancel()
 
 		if err != nil {
@@ -237,12 +238,13 @@ func (h *ShortenHandler) HandleShorten(w http.ResponseWriter, r *http.Request) {
 		shortURL := fmt.Sprintf("%s/%s", baseURL, link.Token)
 
 		resultItem := map[string]interface{}{
-			"token":        link.Token,
-			"short_url":    shortURL,
-			"long_url":     link.LongURL,
-			"created_at":   link.CreatedAt,
-			"expires_at":   link.ExpiresAt,
-			"has_password": link.HasPassword,
+			"token":              link.Token,
+			"short_url":          shortURL,
+			"long_url":           link.LongURL,
+			"created_at":         link.CreatedAt,
+			"expires_at":         link.ExpiresAt,
+			"has_password":       link.HasPassword,
+			"burn_after_reading": link.BurnAfterReading,
 		}
 		if len(link.Routes) > 0 {
 			resultItem["routes"] = link.Routes

@@ -60,6 +60,29 @@ curl -X POST http://localhost:8080/api/v1/shorten \
 
 ---
 
+## Burn After Reading
+
+A burn-after-reading (BAR) link self-destructs after the first visit. The link is atomically deleted on access, ensuring it can only be viewed once.
+
+**Create a BAR link:**
+```bash
+curl -X POST http://localhost:8080/api/v1/shorten \
+  -H "Content-Type: application/json" \
+  -d '{
+    "url": "https://example.com/sensitive",
+    "burn_after_reading": true
+  }'
+```
+
+**Behavior:**
+- The first `GET /{token}` redirects to the target URL and atomically deletes the link.
+- Any subsequent `GET /{token}` returns a 404 (link no longer exists).
+- BAR can be combined with A/B routes.
+- Password-protected BAR links: the link is consumed upon successful password verification (via `POST /verify-password`).
+- No analytics are recorded for BAR links (the row is deleted before the analytics insert).
+
+---
+
 ## 🔥 PRODUCTION INFRASTRUCTURE TROUBLESHOOTING MATRIX
 
 If you encounter systemic operational failures during public cloud deployments, consult this matrix:

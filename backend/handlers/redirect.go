@@ -36,11 +36,12 @@ func NewRedirectHandler(pool *pgxpool.Pool, rdb *redis.Client, analytics *servic
 }
 
 type cachedLink struct {
-	LongURL     string           `json:"long_url"`
-	ExpiresAt   *time.Time       `json:"expires_at"`
-	HasPassword bool             `json:"has_password"`
-	ID          int64            `json:"id"`
-	Routes      []models.RouteSpec `json:"routes,omitempty"`
+	LongURL          string              `json:"long_url"`
+	ExpiresAt        *time.Time          `json:"expires_at"`
+	HasPassword      bool                `json:"has_password"`
+	ID               int64               `json:"id"`
+	Routes           []models.RouteSpec  `json:"routes,omitempty"`
+	BurnAfterReading bool                `json:"burn_after_reading"`
 }
 
 // resolveTargetURL picks a destination from routes via weighted random, or falls back to long_url.
@@ -84,14 +85,14 @@ func (h *RedirectHandler) HandleRedirect(w http.ResponseWriter, r *http.Request)
 		return
 	}
 
-	// Step 1: Check Database directly to ensure secure state for passwords and expiration
-	// (We bypass Redis cache here for absolute source-of-truth on TTL/Passwords)
 	var expiresAt *time.Time
 	var passwordHash *string
 	var routesRaw []byte
+	var isBAR bool
+
 	err := h.pool.QueryRow(ctx,
-		"SELECT id, long_url, expires_at, password_hash, routes FROM links WHERE token = $1", token,
-	).Scan(&link.ID, &link.LongURL, &expiresAt, &passwordHash, &routesRaw)
+		"SELECT id, long_url, expires_at, password_hash, routes, is_burn_after_reading FROM links WHERE token = $1", token,
+	).Scan(&link.ID, &link.LongURL, &expiresAt, &passwordHash, &routesRaw, &isBAR)
 
 	if err != nil {
 		http.Redirect(w, r, "/404", http.StatusTemporaryRedirect)
@@ -99,6 +100,7 @@ func (h *RedirectHandler) HandleRedirect(w http.ResponseWriter, r *http.Request)
 	}
 	link.ExpiresAt = expiresAt
 	link.HasPassword = passwordHash != nil
+	link.BurnAfterReading = isBAR
 
 	if len(routesRaw) > 0 {
 		if err := json.Unmarshal(routesRaw, &link.Routes); err != nil {
@@ -106,26 +108,48 @@ func (h *RedirectHandler) HandleRedirect(w http.ResponseWriter, r *http.Request)
 		}
 	}
 
-	// Resolve target URL via A/B routing or direct long_url
-	targetURL := resolveTargetURL(&link)
-
-	// Expiration check
+	// Expiration check (check before deletion so expired links cannot be consumed)
 	if link.ExpiresAt != nil && link.ExpiresAt.Before(time.Now()) {
 		http.Redirect(w, r, "/404", http.StatusTemporaryRedirect)
 		return
 	}
 
-	// Password check
+	// Password-protected BAR links: let the verify handler consume the link
 	if link.HasPassword {
 		http.Redirect(w, r, fmt.Sprintf("/protected/%s", token), http.StatusTemporaryRedirect)
 		return
 	}
 
-	// Crawler Detection for OG Unfurling
-	ua := strings.ToLower(r.UserAgent())
-	if strings.Contains(ua, "twitterbot") || strings.Contains(ua, "discordbot") || strings.Contains(ua, "slackbot") {
-		h.handleCrawlerUnfurl(w, targetURL)
-		return
+	// Burn-after-reading: atomically consume the link
+	if link.BurnAfterReading {
+		var deletedID int64
+		var deletedLongURL string
+		var deletedRoutesRaw []byte
+		err := h.pool.QueryRow(ctx,
+			`DELETE FROM links WHERE token = $1 AND is_burn_after_reading = true
+			 RETURNING id, long_url, routes`, token,
+		).Scan(&deletedID, &deletedLongURL, &deletedRoutesRaw)
+		if err != nil {
+			http.Redirect(w, r, "/404", http.StatusTemporaryRedirect)
+			return
+		}
+		link.ID = deletedID
+		link.LongURL = deletedLongURL
+		if len(deletedRoutesRaw) > 0 {
+			json.Unmarshal(deletedRoutesRaw, &link.Routes)
+		}
+	}
+
+	// Resolve target URL via A/B routing or direct long_url
+	targetURL := resolveTargetURL(&link)
+
+	// Crawler Detection for OG Unfurling (skip for BAR links)
+	if !link.BurnAfterReading {
+		ua := strings.ToLower(r.UserAgent())
+		if strings.Contains(ua, "twitterbot") || strings.Contains(ua, "discordbot") || strings.Contains(ua, "slackbot") {
+			h.handleCrawlerUnfurl(w, targetURL)
+			return
+		}
 	}
 
 	// Fire-and-forget analytics recording

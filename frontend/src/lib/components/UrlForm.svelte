@@ -10,6 +10,7 @@
   let alias = $state('');
   let showAbField = $state(false);
   let abRoutes = $state<{url: string; weight: number}[]>([]);
+  let burnAfterReading = $state(false);
   
   let shortenedLinks = $state([]);
   let errorMessage = $state('');
@@ -33,7 +34,8 @@
           expires_in: expiresIn === 'never' ? 0 : parseInt(expiresIn),
           password: passwordLock || null,
           custom_token: showAliasField && alias ? alias : null,
-          routes: showAbField && abRoutes.length > 0 ? abRoutes.filter(r => r.url.trim()) : undefined
+          routes: showAbField && abRoutes.length > 0 ? abRoutes.filter(r => r.url.trim()) : undefined,
+          burn_after_reading: burnAfterReading || null
         })
       });
 
@@ -166,6 +168,13 @@
         </button>
       </div>
     </div>
+
+    <div class="flex items-center gap-2 text-sm font-bold mt-1">
+      <label class="flex items-center gap-2 cursor-pointer">
+        <input type="checkbox" bind:checked={burnAfterReading} class="w-4 h-4 border-2 border-black" />
+        <span class="text-red-600">☠ BURN AFTER READING</span>
+      </label>
+    </div>
   </div>
 </form>
 
@@ -203,6 +212,9 @@
                 {/each}
               </div>
             {/if}
+            {#if link.burn_after_reading}
+              <span class="text-[10px] bg-red-200 border border-black px-1 py-0.5 font-bold text-red-800 mt-1 inline-block">☠ BURN AFTER READING</span>
+            {/if}
           </div>
           <div class="flex flex-col gap-2 w-full sm:w-auto shrink-0 font-mono">
             <button
@@ -237,6 +249,9 @@
                   <span class="text-[10px] bg-yellow-200 border border-black px-1 py-0.5 font-bold uppercase">{r.weight}% → {r.url}</span>
                 {/each}
               </div>
+            {/if}
+            {#if link.burn_after_reading}
+              <span class="text-[10px] bg-red-200 border border-black px-1 py-0.5 font-bold text-red-800 mt-1 inline-block">☠ BURN AFTER READING</span>
             {/if}
           </div>
           <div class="flex flex-col gap-2 w-full sm:w-auto shrink-0 font-mono">

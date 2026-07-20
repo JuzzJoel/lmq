@@ -20,6 +20,9 @@ var addPasswordsSQL string
 //go:embed migrations/003_add_routes.sql
 var addRoutesSQL string
 
+//go:embed migrations/004_add_burn_after_reading.sql
+var addBurnAfterReadingSQL string
+
 // NewPostgresPool creates and returns a new pgxpool connected to the database.
 func NewPostgresPool(ctx context.Context, databaseURL string) (*pgxpool.Pool, error) {
 	config, err := pgxpool.ParseConfig(databaseURL)
@@ -67,6 +70,10 @@ func RunMigrations(ctx context.Context, pool *pgxpool.Pool) error {
 	_, err = pool.Exec(ctx, addRoutesSQL)
 	if err != nil {
 		return fmt.Errorf("failed to run migrations (003): %w", err)
+	}
+	_, err = pool.Exec(ctx, addBurnAfterReadingSQL)
+	if err != nil {
+		return fmt.Errorf("failed to run migrations (004): %w", err)
 	}
 	log.Printf("[Database]: Migrations completed successfully.")
 	return nil
