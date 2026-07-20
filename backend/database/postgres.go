@@ -7,6 +7,7 @@ import (
 	"log"
 	"time"
 
+	"github.com/jackc/pgx/v5"
 	"github.com/jackc/pgx/v5/pgxpool"
 )
 
@@ -15,6 +16,9 @@ var initSQL string
 
 //go:embed migrations/002_add_passwords.sql
 var addPasswordsSQL string
+
+//go:embed migrations/003_add_routes.sql
+var addRoutesSQL string
 
 // NewPostgresPool creates and returns a new pgxpool connected to the database.
 func NewPostgresPool(ctx context.Context, databaseURL string) (*pgxpool.Pool, error) {
@@ -26,6 +30,9 @@ func NewPostgresPool(ctx context.Context, databaseURL string) (*pgxpool.Pool, er
 	if config.ConnConfig.TLSConfig != nil {
 		config.ConnConfig.TLSConfig.InsecureSkipVerify = true
 	}
+
+	config.MaxConns = 3
+	config.ConnConfig.DefaultQueryExecMode = pgx.QueryExecModeExec
 
 	pool, err := pgxpool.NewWithConfig(ctx, config)
 	if err != nil {
@@ -44,8 +51,6 @@ func NewPostgresPool(ctx context.Context, databaseURL string) (*pgxpool.Pool, er
 	}
 
 	return nil, fmt.Errorf("failed to ping postgres after %d attempts: %w", maxRetries, pingErr)
-
-	return pool, nil
 }
 
 // RunMigrations executes the embedded SQL migrations.
@@ -58,6 +63,10 @@ func RunMigrations(ctx context.Context, pool *pgxpool.Pool) error {
 	_, err = pool.Exec(ctx, addPasswordsSQL)
 	if err != nil {
 		return fmt.Errorf("failed to run migrations (002): %w", err)
+	}
+	_, err = pool.Exec(ctx, addRoutesSQL)
+	if err != nil {
+		return fmt.Errorf("failed to run migrations (003): %w", err)
 	}
 	log.Printf("[Database]: Migrations completed successfully.")
 	return nil

@@ -11,8 +11,52 @@ LMQ is a high-performance, modular URL shortening platform utilizing a brutalist
 - Configurable URL expiration timestamps.
 - Hash-secured password barriers on protected links.
 - GeoIP tracking (City, Region, Country tracking).
+- **A/B testing**: weighted multi-destination routing per link.
 - Dedicated administrative dashboard mapping click metrics in real-time.
 - Uncompromising minimalist design language (100% sharp-corners, high-contrast primary colors).
+
+---
+
+## A/B Testing (Weighted Routing)
+
+LMQ supports routing a single short link to multiple destinations based on configurable weights.
+
+**Create a link with A/B routes:**
+```bash
+curl -X POST http://localhost:8080/api/v1/shorten \
+  -H "Content-Type: application/json" \
+  -d '{
+    "url": "https://example.com/base",
+    "routes": [
+      {"url": "https://example.com/variant-a", "weight": 70},
+      {"url": "https://example.com/variant-b", "weight": 30}
+    ]
+  }'
+```
+
+**Response** (201 Created):
+```json
+{
+  "data": {
+    "results": [{
+      "token": "AbCdEf",
+      "short_url": "https://lmq.name.ng/AbCdEf",
+      "long_url": "https://example.com/base",
+      "routes": [
+        {"url": "https://example.com/variant-a", "weight": 70},
+        {"url": "https://example.com/variant-b", "weight": 30}
+      ],
+      "created_at": "..."
+    }]
+  },
+  "error": null
+}
+```
+
+**Redirect behavior:**
+- Each visit performs a weighted random selection among the configured routes.
+- The `routes` array appears in all analytics responses (list and detail).
+- Routes are optional; if omitted, the link redirects directly to `long_url`.
 
 ---
 

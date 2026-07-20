@@ -119,6 +119,13 @@
         {analytics.long_url}
         <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24" stroke-width="3"><path stroke-linecap="square" d="M10 6H6a2 2 0 00-2 2v10a2 2 0 002 2h10a2 2 0 002-2v-4M14 4h6m0 0v6m0-6L10 14"></path></svg>
       </a>
+      {#if analytics.routes && analytics.routes.length > 0}
+        <div class="mt-2 flex gap-1 flex-wrap">
+          {#each analytics.routes as r}
+            <span class="text-[11px] bg-yellow-200 border border-black px-1 py-0.5 font-bold uppercase">{r.weight}% → {r.url}</span>
+          {/each}
+        </div>
+      {/if}
     </div>
     <div class="text-right border-l-4 border-black pl-6">
       <p class="text-6xl font-bold tracking-tighter">{analytics.total_clicks.toLocaleString()}</p>

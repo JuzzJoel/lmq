@@ -12,6 +12,7 @@ type Link struct {
 	ClickCount   int64      `json:"click_count"`
 	HasPassword  bool       `json:"has_password"`
 	PasswordHash *string    `json:"-"` // Not exported in JSON
+	Routes       []RouteSpec `json:"routes,omitempty"`
 }
 
 // ClickEvent represents an analytics record for a single link visit.
@@ -30,12 +31,19 @@ type ClickEvent struct {
 	Referer   string    `json:"referer,omitempty"`
 }
 
+// RouteSpec defines a single A/B testing destination with a weight percentage.
+type RouteSpec struct {
+	URL    string `json:"url"`
+	Weight int    `json:"weight"`
+}
+
 // ShortenRequest defines the expected JSON payload for creating a new short link.
 type ShortenRequest struct {
-	URL         string `json:"url"`
-	CustomToken string `json:"custom_token,omitempty"`
-	ExpiresIn   int    `json:"expires_in,omitempty"` // in hours
-	Password    string `json:"password,omitempty"`
+	URL         string     `json:"url"`
+	CustomToken string     `json:"custom_token,omitempty"`
+	ExpiresIn   int        `json:"expires_in,omitempty"` // in hours
+	Password    string     `json:"password,omitempty"`
+	Routes      []RouteSpec `json:"routes,omitempty"`
 }
 
 // APIResponse is a generic response wrapper for API responses.
@@ -55,6 +63,7 @@ type LinkAnalytics struct {
 	CountryGroups []CountryCount `json:"country_groups"`
 	Browsers     []BrowserCount `json:"browsers"`
 	RecentClicks []ClickEvent   `json:"recent_clicks"`
+	Routes       []RouteSpec    `json:"routes,omitempty"`
 }
 
 // DayCount represents click counts grouped by day.

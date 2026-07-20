@@ -23,7 +23,7 @@ func HandleGetDocs(w http.ResponseWriter, r *http.Request) {
 			{
 				Method:      "POST",
 				Path:        "/api/v1/shorten",
-				Description: "Create one or multiple shortened links. Payload: { url: string, expires_in?: int, password?: string, alias?: string }",
+				Description: "Create one or multiple shortened links. Payload: { url: string, routes?: [{ url: string, weight: int }], expires_in?: int, password?: string, custom_token?: string }",
 			},
 			{
 				Method:      "POST",
@@ -43,7 +43,7 @@ func HandleGetDocs(w http.ResponseWriter, r *http.Request) {
 			{
 				Method:      "GET",
 				Path:        "/{token}",
-				Description: "Redirect to the original long URL associated with this short token.",
+				Description: "Redirect to the resolved target URL. If the link has A/B routes, a weighted random route is selected; otherwise redirects to the base long_url.",
 			},
 		},
 	}

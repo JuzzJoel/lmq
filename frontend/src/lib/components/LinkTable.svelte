@@ -132,6 +132,9 @@
               {#if link.has_password}
                  <span title="Password Protected" class="ml-2 text-xs">🔒</span>
               {/if}
+              {#if link.routes && link.routes.length > 0}
+                 <span title="A/B Testing: {link.routes.length} routes" class="ml-1 text-xs">🔀</span>
+              {/if}
             </td>
             <td class="px-4 py-3 max-w-xs truncate text-black font-mono text-xs border-r border-black font-bold">
               {link.long_url}

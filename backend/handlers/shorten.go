@@ -74,6 +74,36 @@ func (h *ShortenHandler) HandleShorten(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
+	if req.Routes != nil && len(req.Routes) > 0 && len(validURLs) > 1 {
+		writeError(w, http.StatusBadRequest, "A/B routes cannot be assigned to bulk URL requests.")
+		return
+	}
+
+	if req.Routes != nil && len(req.Routes) > 0 {
+		totalWeight := 0
+		seen := make(map[string]bool)
+		for _, r := range req.Routes {
+			if r.URL == "" {
+				writeError(w, http.StatusBadRequest, "Each route must have a URL.")
+				return
+			}
+			if r.Weight <= 0 {
+				writeError(w, http.StatusBadRequest, "Each route must have a positive weight.")
+				return
+			}
+			if seen[r.URL] {
+				writeError(w, http.StatusBadRequest, "Duplicate route URLs are not allowed.")
+				return
+			}
+			seen[r.URL] = true
+			totalWeight += r.Weight
+		}
+		if totalWeight <= 0 {
+			writeError(w, http.StatusBadRequest, "Route weights must sum to a positive value.")
+			return
+		}
+	}
+
 	var results []map[string]interface{}
 
 	if h.pool == nil {
@@ -87,12 +117,16 @@ func (h *ShortenHandler) HandleShorten(w http.ResponseWriter, r *http.Request) {
 			if baseURL == "" {
 				baseURL = "https://lmq.name.ng"
 			}
-			results = append(results, map[string]interface{}{
+			item := map[string]interface{}{
 				"short_url":  fmt.Sprintf("%s/%s", baseURL, mockToken),
 				"token":      mockToken,
 				"long_url":   vurl,
 				"created_at": time.Now(),
-			})
+			}
+			if len(req.Routes) > 0 {
+				item["routes"] = req.Routes
+			}
+			results = append(results, item)
 		}
 		writeJSON(w, http.StatusCreated, map[string]interface{}{
 			"results": results,
@@ -141,7 +175,7 @@ func (h *ShortenHandler) HandleShorten(w http.ResponseWriter, r *http.Request) {
 				ctx, cancel := context.WithTimeout(r.Context(), 5*time.Second)
 				err = h.pool.QueryRow(ctx, "SELECT EXISTS(SELECT 1 FROM links WHERE token = $1)", genToken).Scan(&exists)
 				cancel()
-				if err == nil && !exists {
+			if err == nil && !exists {
 					token = genToken
 					break
 				}
@@ -170,12 +204,22 @@ func (h *ShortenHandler) HandleShorten(w http.ResponseWriter, r *http.Request) {
 		}
 
 		var link models.Link
+		var routesJSON string
+		if len(req.Routes) > 0 {
+			rj, err := json.Marshal(req.Routes)
+			if err != nil {
+				writeError(w, http.StatusInternalServerError, "Failed to encode routes")
+				return
+			}
+			routesJSON = string(rj)
+		}
+
 		ctx, cancel := context.WithTimeout(r.Context(), 5*time.Second)
 		err = h.pool.QueryRow(ctx, `
-			INSERT INTO links (token, long_url, expires_at, password_hash) 
-			VALUES ($1, $2, $3, $4) 
-			RETURNING id, token, long_url, created_at, expires_at, click_count, (password_hash IS NOT NULL)
-		`, token, vurl, expiresAt, passwordHash).Scan(&link.ID, &link.Token, &link.LongURL, &link.CreatedAt, &link.ExpiresAt, &link.ClickCount, &link.HasPassword)
+			INSERT INTO links (token, long_url, expires_at, password_hash, routes) 
+			VALUES ($1, $2, $3, $4, $5) 
+			RETURNING id, token, long_url, created_at, expires_at, click_count, (password_hash IS NOT NULL), routes
+		`, token, vurl, expiresAt, passwordHash, routesJSON).Scan(&link.ID, &link.Token, &link.LongURL, &link.CreatedAt, &link.ExpiresAt, &link.ClickCount, &link.HasPassword, &link.Routes)
 		cancel()
 
 		if err != nil {
@@ -192,14 +236,18 @@ func (h *ShortenHandler) HandleShorten(w http.ResponseWriter, r *http.Request) {
 		}
 		shortURL := fmt.Sprintf("%s/%s", baseURL, link.Token)
 
-		results = append(results, map[string]interface{}{
+		resultItem := map[string]interface{}{
 			"token":        link.Token,
 			"short_url":    shortURL,
 			"long_url":     link.LongURL,
 			"created_at":   link.CreatedAt,
 			"expires_at":   link.ExpiresAt,
 			"has_password": link.HasPassword,
-		})
+		}
+		if len(link.Routes) > 0 {
+			resultItem["routes"] = link.Routes
+		}
+		results = append(results, resultItem)
 	}
 
 	writeJSON(w, http.StatusCreated, map[string]interface{}{

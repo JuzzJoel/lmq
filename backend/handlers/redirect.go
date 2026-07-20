@@ -2,8 +2,10 @@ package handlers
 
 import (
 	"context"
+	"encoding/json"
 	"fmt"
 	"io"
+	"math/rand"
 	"net/http"
 	"strings"
 	"time"
@@ -13,6 +15,7 @@ import (
 	"github.com/redis/go-redis/v9"
 	"golang.org/x/net/html"
 
+	"github.com/user/lmq/backend/models"
 	"github.com/user/lmq/backend/services"
 )
 
@@ -33,10 +36,32 @@ func NewRedirectHandler(pool *pgxpool.Pool, rdb *redis.Client, analytics *servic
 }
 
 type cachedLink struct {
-	LongURL     string     `json:"long_url"`
-	ExpiresAt   *time.Time `json:"expires_at"`
-	HasPassword bool       `json:"has_password"`
-	ID          int64      `json:"id"`
+	LongURL     string           `json:"long_url"`
+	ExpiresAt   *time.Time       `json:"expires_at"`
+	HasPassword bool             `json:"has_password"`
+	ID          int64            `json:"id"`
+	Routes      []models.RouteSpec `json:"routes,omitempty"`
+}
+
+// resolveTargetURL picks a destination from routes via weighted random, or falls back to long_url.
+func resolveTargetURL(link *cachedLink) string {
+	if len(link.Routes) > 0 {
+		totalWeight := 0
+		for _, r := range link.Routes {
+			totalWeight += r.Weight
+		}
+		if totalWeight > 0 {
+			roll := rand.Intn(totalWeight)
+			cumulative := 0
+			for _, r := range link.Routes {
+				cumulative += r.Weight
+				if roll < cumulative {
+					return r.URL
+				}
+			}
+		}
+	}
+	return link.LongURL
 }
 
 // HandleRedirect intercepts GET /{token}, performs checks, and redirects or unfurls.
@@ -63,9 +88,10 @@ func (h *RedirectHandler) HandleRedirect(w http.ResponseWriter, r *http.Request)
 	// (We bypass Redis cache here for absolute source-of-truth on TTL/Passwords)
 	var expiresAt *time.Time
 	var passwordHash *string
+	var routesRaw []byte
 	err := h.pool.QueryRow(ctx,
-		"SELECT id, long_url, expires_at, password_hash FROM links WHERE token = $1", token,
-	).Scan(&link.ID, &link.LongURL, &expiresAt, &passwordHash)
+		"SELECT id, long_url, expires_at, password_hash, routes FROM links WHERE token = $1", token,
+	).Scan(&link.ID, &link.LongURL, &expiresAt, &passwordHash, &routesRaw)
 
 	if err != nil {
 		http.Redirect(w, r, "/404", http.StatusTemporaryRedirect)
@@ -73,6 +99,15 @@ func (h *RedirectHandler) HandleRedirect(w http.ResponseWriter, r *http.Request)
 	}
 	link.ExpiresAt = expiresAt
 	link.HasPassword = passwordHash != nil
+
+	if len(routesRaw) > 0 {
+		if err := json.Unmarshal(routesRaw, &link.Routes); err != nil {
+			link.Routes = nil
+		}
+	}
+
+	// Resolve target URL via A/B routing or direct long_url
+	targetURL := resolveTargetURL(&link)
 
 	// Expiration check
 	if link.ExpiresAt != nil && link.ExpiresAt.Before(time.Now()) {
@@ -89,7 +124,7 @@ func (h *RedirectHandler) HandleRedirect(w http.ResponseWriter, r *http.Request)
 	// Crawler Detection for OG Unfurling
 	ua := strings.ToLower(r.UserAgent())
 	if strings.Contains(ua, "twitterbot") || strings.Contains(ua, "discordbot") || strings.Contains(ua, "slackbot") {
-		h.handleCrawlerUnfurl(w, link.LongURL)
+		h.handleCrawlerUnfurl(w, targetURL)
 		return
 	}
 
@@ -100,7 +135,7 @@ func (h *RedirectHandler) HandleRedirect(w http.ResponseWriter, r *http.Request)
 
 	// Issue HTTP 301 Moved Permanently
 	w.Header().Set("Cache-Control", "no-cache, no-store, must-revalidate")
-	w.Header().Set("Location", link.LongURL)
+	w.Header().Set("Location", targetURL)
 	w.WriteHeader(http.StatusMovedPermanently)
 }
 

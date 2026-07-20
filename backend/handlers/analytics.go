@@ -2,6 +2,7 @@ package handlers
 
 import (
 	"context"
+	"encoding/json"
 	"net/http"
 	"strconv"
 	"time"
@@ -53,9 +54,10 @@ func (h *AnalyticsHandler) HandleGetAnalytics(w http.ResponseWriter, r *http.Req
 	var linkID int64
 	var longURL string
 	var totalClicks int64
+	var routesRaw []byte
 	err := h.pool.QueryRow(ctx,
-		"SELECT id, long_url, click_count FROM links WHERE token = $1", token,
-	).Scan(&linkID, &longURL, &totalClicks)
+		"SELECT id, long_url, click_count, routes FROM links WHERE token = $1", token,
+	).Scan(&linkID, &longURL, &totalClicks, &routesRaw)
 	if err != nil {
 		writeError(w, http.StatusNotFound, "Link not found")
 		return
@@ -189,6 +191,9 @@ func (h *AnalyticsHandler) HandleGetAnalytics(w http.ResponseWriter, r *http.Req
 		Browsers:      browsers,
 		RecentClicks:  recentClicks,
 	}
+	if len(routesRaw) > 0 {
+		json.Unmarshal(routesRaw, &analytics.Routes)
+	}
 
 	writeJSON(w, http.StatusOK, analytics)
 }
@@ -240,7 +245,7 @@ func (h *AnalyticsHandler) HandleListLinks(w http.ResponseWriter, r *http.Reques
 	// Let's do it directly.
 	if search != "" {
 		rows, err = h.pool.Query(ctx, `
-			SELECT id, token, long_url, created_at, expires_at, click_count, (password_hash IS NOT NULL)
+			SELECT id, token, long_url, created_at, expires_at, click_count, (password_hash IS NOT NULL), routes
 			FROM links
 			WHERE long_url ILIKE '%' || $1 || '%' OR token ILIKE '%' || $1 || '%'
 			ORDER BY created_at DESC
@@ -248,7 +253,7 @@ func (h *AnalyticsHandler) HandleListLinks(w http.ResponseWriter, r *http.Reques
 		`, search, limit, offset)
 	} else {
 		rows, err = h.pool.Query(ctx, `
-			SELECT id, token, long_url, created_at, expires_at, click_count, (password_hash IS NOT NULL)
+			SELECT id, token, long_url, created_at, expires_at, click_count, (password_hash IS NOT NULL), routes
 			FROM links
 			ORDER BY created_at DESC
 			LIMIT $1 OFFSET $2
@@ -264,10 +269,14 @@ func (h *AnalyticsHandler) HandleListLinks(w http.ResponseWriter, r *http.Reques
 	links := make([]models.Link, 0)
 	for rows.Next() {
 		var link models.Link
+		var routesRaw []byte
 		if scanErr := rows.Scan(
 			&link.ID, &link.Token, &link.LongURL,
-			&link.CreatedAt, &link.ExpiresAt, &link.ClickCount, &link.HasPassword,
+			&link.CreatedAt, &link.ExpiresAt, &link.ClickCount, &link.HasPassword, &routesRaw,
 		); scanErr == nil {
+			if len(routesRaw) > 0 {
+				json.Unmarshal(routesRaw, &link.Routes)
+			}
 			links = append(links, link)
 		}
 	}

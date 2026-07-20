@@ -8,6 +8,8 @@
   let showPassword = $state(false);
   let showAliasField = $state(false);
   let alias = $state('');
+  let showAbField = $state(false);
+  let abRoutes = $state<{url: string; weight: number}[]>([]);
   
   let shortenedLinks = $state([]);
   let errorMessage = $state('');
@@ -30,7 +32,8 @@
           url: inputUrlValue,
           expires_in: expiresIn === 'never' ? 0 : parseInt(expiresIn),
           password: passwordLock || null,
-          custom_token: showAliasField && alias ? alias : null
+          custom_token: showAliasField && alias ? alias : null,
+          routes: showAbField && abRoutes.length > 0 ? abRoutes.filter(r => r.url.trim()) : undefined
         })
       });
 
@@ -119,6 +122,9 @@
       <button type="button" onclick={() => showAliasField = !showAliasField} class="underline hover:text-red-500">
         {showAliasField ? '- REMOVE ALIAS' : '+ ADD ALIAS'}
       </button>
+      <button type="button" onclick={() => { showAbField = !showAbField; if (showAbField && abRoutes.length === 0) abRoutes = [{url: '', weight: 50}, {url: '', weight: 50}]; }} class="underline hover:text-red-500">
+        {showAbField ? '- REMOVE A/B ROUTING' : '+ A/B TEST (MULTI-ROUTE)'}
+      </button>
     </div>
 
     {#if showAliasField}
@@ -129,6 +135,20 @@
           placeholder="Custom vanity slug (single URL requests only)" 
           class="w-full bg-white border-2 border-black p-2 rounded-none outline-none text-xs"
         />
+      </div>
+    {/if}
+
+    {#if showAbField}
+      <div class="border-t-2 border-black pt-2 mt-2">
+        <p class="text-xs font-bold uppercase tracking-wider mb-2">A/B ROUTES — traffic is split by weight</p>
+        {#each abRoutes as route, i}
+          <div class="flex gap-2 items-center mb-1">
+            <input type="text" bind:value={route.url} placeholder="Route URL {i+1}" class="flex-1 bg-white border-2 border-black p-1 rounded-none outline-none text-xs" />
+            <input type="number" bind:value={route.weight} min="1" max="100" class="w-16 bg-white border-2 border-black p-1 rounded-none outline-none text-xs text-center" />
+            <button type="button" onclick={() => abRoutes = abRoutes.filter((_, j) => j !== i)} class="text-red-500 text-xs font-bold px-1">✕</button>
+          </div>
+        {/each}
+        <button type="button" onclick={() => abRoutes = [...abRoutes, {url: '', weight: 50}]} class="text-xs underline mt-1">+ ADD ROUTE</button>
       </div>
     {/if}
 
@@ -176,6 +196,13 @@
           <div class="truncate w-full sm:max-w-xs xl:max-w-md ml-0 sm:ml-4 flex-1">
             <p class="text-xs font-bold text-gray-400 truncate">{link.long_url}</p>
             <a href={link.short_url} target="_blank" class="text-lg font-bold underline text-black hover:text-red-600 font-mono">{link.short_url}</a>
+            {#if link.routes && link.routes.length > 0}
+              <div class="flex gap-1 mt-1 flex-wrap">
+                {#each link.routes as r}
+                  <span class="text-[10px] bg-yellow-200 border border-black px-1 py-0.5 font-bold uppercase">{r.weight}% → {r.url}</span>
+                {/each}
+              </div>
+            {/if}
           </div>
           <div class="flex flex-col gap-2 w-full sm:w-auto shrink-0 font-mono">
             <button
@@ -204,6 +231,13 @@
           <div class="truncate w-full sm:max-w-xs xl:max-w-md ml-0 sm:ml-4 flex-1">
             <p class="text-xs font-bold text-gray-400 truncate">{link.long_url}</p>
             <a href={link.short_url} target="_blank" class="text-lg font-bold underline text-black hover:text-red-600 font-mono">{link.short_url}</a>
+            {#if link.routes && link.routes.length > 0}
+              <div class="flex gap-1 mt-1 flex-wrap">
+                {#each link.routes as r}
+                  <span class="text-[10px] bg-yellow-200 border border-black px-1 py-0.5 font-bold uppercase">{r.weight}% → {r.url}</span>
+                {/each}
+              </div>
+            {/if}
           </div>
           <div class="flex flex-col gap-2 w-full sm:w-auto shrink-0 font-mono">
             <button
