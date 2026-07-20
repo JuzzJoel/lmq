@@ -30,7 +30,7 @@
           url: inputUrlValue,
           expires_in: expiresIn === 'never' ? 0 : parseInt(expiresIn),
           password: passwordLock || null,
-          alias: showAliasField && alias ? alias : null
+          custom_token: showAliasField && alias ? alias : null
         })
       });
 

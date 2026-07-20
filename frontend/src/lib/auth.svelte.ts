@@ -11,9 +11,14 @@ export function checkAuth() {
     authState.isChecking = false;
 }
 
-export function login(token: string) {
+export async function login(token: string) {
     if (typeof sessionStorage !== 'undefined') {
-        sessionStorage.setItem('admin_token', token.trim());
+        const encoder = new TextEncoder();
+        const data = encoder.encode(token.trim());
+        const hashBuffer = await crypto.subtle.digest('SHA-256', data);
+        const hashArray = Array.from(new Uint8Array(hashBuffer));
+        const hashHex = hashArray.map(b => b.toString(16).padStart(2, '0')).join('');
+        sessionStorage.setItem('admin_token', hashHex);
     }
     authState.isAuthenticated = true;
 }
