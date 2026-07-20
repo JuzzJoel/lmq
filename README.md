@@ -21,7 +21,7 @@ LMQ is a high-performance, modular URL shortening platform utilizing a brutalist
 If you encounter systemic operational failures during public cloud deployments, consult this matrix:
 
 - **Error A: 401 Unauthorized / Invalid Token**
-  - **Fix:** Trim quotes out of `.env` environment strings. Ensure `ADMIN_SECRET_HASH` matches exact hash bytes natively generated.
+  - **Fix:** Set `ADMIN_SECRET_HASH` in your `.env` to the SHA-256 hash of the admin password (not the plaintext password itself). The middleware compares this directly against SHA-256(incoming token). To generate the hash: `echo -n "your-admin-password" | sha256sum`.
 
 - **Error B: 403 Forbidden**
   - **Fix:** Verify Origin matching header inside `ALLOWED_ORIGINS` string array keys in the Go backend configuration.

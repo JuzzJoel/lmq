@@ -94,10 +94,9 @@ func (h *ShortenHandler) HandleShorten(w http.ResponseWriter, r *http.Request) {
 				"created_at": time.Now(),
 			})
 		}
-		w.Header().Set("Content-Type", "application/json")
-		w.WriteHeader(http.StatusCreated)
-		json.NewEncoder(w).Encode(map[string]interface{}{
+		writeJSON(w, http.StatusCreated, map[string]interface{}{
 			"results": results,
+			"mock":    true,
 		})
 		return
 	}

@@ -34,18 +34,19 @@
         })
       });
 
-      const data = await res.json();
+      const response = await res.json();
 
       if (res.ok) {
-        if (data && data.results && Array.isArray(data.results)) {
-          shortenedLinks = data.results;
-        } else if (data && data.short_url) {
-          shortenedLinks = [data];
+        const payload = response.data || response;
+        if (payload && payload.results && Array.isArray(payload.results)) {
+          shortenedLinks = payload.results;
+        } else if (payload && payload.short_url) {
+          shortenedLinks = [payload];
         } else {
-          shortenedLinks = [data];
+          shortenedLinks = [payload];
         }
       } else {
-        errorMessage = data.error || 'Failed to shorten URLs.';
+        errorMessage = response.error || 'Failed to shorten URLs.';
       }
     } catch (err: any) {
       errorMessage = 'Network or connection error occurred.';
@@ -192,6 +193,27 @@
               class="flex-1 sm:flex-none bg-black text-white border-2 border-black rounded-none px-3 py-1 text-xs font-bold shadow-[2px_2px_0px_0px_#000] active:translate-x-[2px] active:translate-y-[2px] active:shadow-none transition-all uppercase"
             >
               DOWNLOAD VECTOR QR
+            </button>
+          </div>
+        </div>
+      {:catch}
+        <div class="bg-white border-4 border-black rounded-none p-4 shadow-[4px_4px_0px_0px_#000] flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
+          <div class="w-28 h-28 shrink-0 border-4 border-black shadow-[2px_2px_0px_0px_#ccc] p-1 bg-white flex items-center justify-center text-xs text-red-500 font-bold">
+            QR ERROR
+          </div>
+          <div class="truncate w-full sm:max-w-xs xl:max-w-md ml-0 sm:ml-4 flex-1">
+            <p class="text-xs font-bold text-gray-400 truncate">{link.long_url}</p>
+            <a href={link.short_url} target="_blank" class="text-lg font-bold underline text-black hover:text-red-600 font-mono">{link.short_url}</a>
+          </div>
+          <div class="flex flex-col gap-2 w-full sm:w-auto shrink-0 font-mono">
+            <button
+              type="button"
+              onclick={() => handleCopy(link.short_url, i)}
+              class="flex-1 sm:flex-none border-2 border-black rounded-none px-3 py-1 text-xs font-bold shadow-[2px_2px_0px_0px_#000] transition-all uppercase"
+              class:bg-yellow-400={copyTargetIndex === i}
+              class:bg-white={copyTargetIndex !== i}
+            >
+              {copyTargetIndex === i ? 'COPIED!' : 'COPY SHORT LINK'}
             </button>
           </div>
         </div>

@@ -54,8 +54,8 @@ func (h *RedirectHandler) HandleRedirect(w http.ResponseWriter, r *http.Request)
 
 	if h.pool == nil {
 		w.Header().Set("Cache-Control", "no-cache, no-store, must-revalidate")
-		w.Header().Set("Location", "https://www.google.com")
-		w.WriteHeader(http.StatusMovedPermanently)
+		w.Header().Set("Location", "/")
+		w.WriteHeader(http.StatusTemporaryRedirect)
 		return
 	}
 

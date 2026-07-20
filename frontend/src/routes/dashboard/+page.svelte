@@ -12,6 +12,7 @@
   let totalLinks = $state(0);
   let loading = $state(true);
   let error: string | null = $state(null);
+  let isMockMode = $state(false);
 
   let totalClicks = $derived(links.reduce((sum, link) => sum + link.click_count, 0));
 
@@ -42,6 +43,7 @@
     } else {
       links = res.data.links || [];
       totalLinks = res.data.total || 0;
+      isMockMode = res.mock || false;
       currentPage = page;
       searchQuery = search;
     }
@@ -58,6 +60,12 @@
 <div class="mb-8 border-b-4 border-black pb-4">
   <h1 class="text-4xl font-bold uppercase tracking-tighter text-black">OVERVIEW</h1>
 </div>
+
+{#if isMockMode}
+  <div class="bg-red-500 border-4 border-black text-white p-4 mb-6 shadow-hard font-bold uppercase text-center">
+    ⚠ DEMO / MOCK MODE — Data shown is not real. No database connection available.
+  </div>
+{/if}
 
 {#if loading && links.length === 0}
   <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-8">

@@ -11,6 +11,7 @@
   let analytics: LinkAnalytics | null = $state(null);
   let loading = $state(true);
   let error: string | null = $state(null);
+  let isMockMode = $state(false);
 
   async function loadData() {
     loading = true;
@@ -20,6 +21,7 @@
       error = res.error;
     } else {
       analytics = res.data;
+      isMockMode = res.mock || false;
     }
     loading = false;
   }
@@ -85,6 +87,12 @@
     BACK TO DASHBOARD
   </a>
 </div>
+
+{#if isMockMode}
+  <div class="bg-red-500 border-4 border-black text-white p-4 mb-6 shadow-hard font-bold uppercase text-center">
+    ⚠ DEMO / MOCK MODE — Analytics shown are fake. No database connection available.
+  </div>
+{/if}
 
 {#if loading}
   <div class="border-2 border-black bg-white p-6 shadow-hard h-24 mb-8 animate-pulse"></div>

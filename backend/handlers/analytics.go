@@ -35,16 +35,17 @@ func (h *AnalyticsHandler) HandleGetAnalytics(w http.ResponseWriter, r *http.Req
 	defer cancel()
 
 	if h.pool == nil {
-		writeJSON(w, http.StatusOK, models.LinkAnalytics{
-			Token:         token,
-			LongURL:       "https://mock-backend.local",
-			TotalClicks:   999,
-			ClicksByDay:   []models.DayCount{{Date: time.Now().Format("2006-01-02"), Count: 999}},
-			Cities:        []models.CityCount{{City: "Mock City", Count: 999}},
-			Regions:       []models.RegionCount{{Region: "Mock Region", Count: 999}},
-			CountryGroups: []models.CountryCount{{CountryCode: "XX", Count: 999}},
-			Browsers:      []models.BrowserCount{{Browser: "MockBrowser", Count: 999}},
-			RecentClicks:  []models.ClickEvent{},
+		writeJSON(w, http.StatusOK, map[string]interface{}{
+			"mock":          true,
+			"token":         token,
+			"long_url":      "https://mock-backend.local",
+			"total_clicks":  999,
+			"clicks_by_day": []models.DayCount{{Date: time.Now().Format("2006-01-02"), Count: 999}},
+			"cities":        []models.CityCount{{City: "Mock City", Count: 999}},
+			"regions":       []models.RegionCount{{Region: "Mock Region", Count: 999}},
+			"country_groups": []models.CountryCount{{CountryCode: "XX", Count: 999}},
+			"browsers":      []models.BrowserCount{{Browser: "MockBrowser", Count: 999}},
+			"recent_clicks": []models.ClickEvent{},
 		})
 		return
 	}
@@ -216,6 +217,7 @@ func (h *AnalyticsHandler) HandleListLinks(w http.ResponseWriter, r *http.Reques
 				{ID: 2, Token: "mockB62-1", LongURL: "https://mock.link.2", CreatedAt: time.Now(), ClickCount: 300},
 			},
 			"total": 2,
+			"mock":  true,
 		})
 		return
 	}

@@ -50,6 +50,7 @@ export interface BulkShortenResponse {
 export interface APIResponse<T> {
   data: T;
   error: string | null;
+  mock?: boolean;
 }
 
 export interface LinkAnalytics {
