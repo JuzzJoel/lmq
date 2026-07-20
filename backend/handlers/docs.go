@@ -23,7 +23,12 @@ func HandleGetDocs(w http.ResponseWriter, r *http.Request) {
 			{
 				Method:      "POST",
 				Path:        "/api/v1/shorten",
-				Description: "Create one or multiple shortened links. Payload: { url: string, routes?: [{ url: string, weight: int }], expires_in?: int, password?: string, custom_token?: string, burn_after_reading?: bool, tags?: string[] }",
+				Description: "Create one or multiple shortened links (JSON). Payload: { url: string, routes?: [{ url: string, weight: int }], expires_in?: int, password?: string, custom_token?: string, burn_after_reading?: bool, tags?: string[] }",
+			},
+			{
+				Method:      "POST",
+				Path:        "/api/v1/shorten/csv",
+				Description: "Bulk create shortened links from CSV file upload (multipart/form-data, field 'file'). Columns: url, custom_token, password, expires_in, burn_after_reading, tags.",
 			},
 			{
 				Method:      "POST",

@@ -72,6 +72,7 @@ func main() {
 
 	// 6. Initialize handlers
 	shortenHandler := handlers.NewShortenHandler(pool, rdb)
+	csvShortenHandler := handlers.NewCsvShortenHandler(pool, rdb)
 	redirectHandler := handlers.NewRedirectHandler(pool, rdb, analyticsService)
 	analyticsHandler := handlers.NewAnalyticsHandler(pool)
 	verifyHandler := handlers.NewVerifyHandler(pool)
@@ -88,6 +89,7 @@ func main() {
 	r.Route("/api/v1", func(r chi.Router) {
 		r.Get("/docs", handlers.HandleGetDocs)
 		r.With(appmw.LocalRateLimiter()).Post("/shorten", shortenHandler.HandleShorten)
+		r.With(appmw.LocalRateLimiter()).Post("/shorten/csv", csvShortenHandler.HandleCsvShorten)
 		r.Post("/verify-password", verifyHandler.HandleVerify)
 		
 		r.Route("/analytics", func(r chi.Router) {

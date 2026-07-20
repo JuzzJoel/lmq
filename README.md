@@ -107,6 +107,37 @@ Tags appear in the response of create, list, and analytics detail endpoints.
 
 ---
 
+## Bulk CSV Upload
+
+Create up to 50 links at once by uploading a CSV file.
+
+**Endpoint:** `POST /api/v1/shorten/csv` (multipart/form-data)
+
+**CSV columns:**
+| Column | Required | Description |
+|--------|----------|-------------|
+| `url` | Yes | Target URL |
+| `custom_token` | No | Custom alias |
+| `password` | No | Password protection |
+| `expires_in` | No | Expiration in hours |
+| `burn_after_reading` | No | `true` or `false` |
+| `tags` | No | Comma-separated tags |
+
+**Example:**
+```bash
+curl -X POST http://localhost:8080/api/v1/shorten/csv \
+  -F "file=@links.csv"
+```
+
+Example `links.csv`:
+```csv
+url,custom_token,password,expires_in,burn_after_reading,tags
+https://example.com/page1,,,24,true,campaign-a
+https://example.com/page2,my-alias,secret,0,false,campaign-b
+```
+
+---
+
 ## 🔥 PRODUCTION INFRASTRUCTURE TROUBLESHOOTING MATRIX
 
 If you encounter systemic operational failures during public cloud deployments, consult this matrix:
