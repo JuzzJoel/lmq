@@ -29,10 +29,14 @@ func main() {
 
 	// 2. Initialize Postgres pool + run migrations
 	ctx := context.Background()
+	isProd := os.Getenv("APP_ENV") == "production" || os.Getenv("APP_ENV") == "prod" || os.Getenv("ENV") == "production" || os.Getenv("ENV") == "prod" || os.Getenv("RENDER") != ""
+
 	pool, err := database.NewPostgresPool(ctx, cfg.DatabaseURL)
 	if err != nil {
-		// log.Fatalf("[Main]: Database init failed: %v", err)
-		log.Printf("[EMERGENCY BYPASS] Database/Cache unavailable. Running in decoupled headless testing mode on port 8080. (DB Error: %v)", err)
+		if isProd {
+			log.Fatalf("[Main]: Database init failed: %v", err)
+		}
+		log.Printf("[EMERGENCY BYPASS] Database/Cache unavailable. Running in decoupled headless testing mode on port %s. (DB Error: %v)", cfg.Port, err)
 	}
 	if pool != nil {
 		defer pool.Close()
@@ -40,6 +44,9 @@ func main() {
 
 	if pool != nil {
 		if err := database.RunMigrations(ctx, pool); err != nil {
+			if isProd {
+				log.Fatalf("[Main]: Migrations failed: %v", err)
+			}
 			log.Printf("[Main]: Migrations failed: %v", err)
 		}
 	}
@@ -47,7 +54,10 @@ func main() {
 	// 3. Initialize Redis client
 	rdb, err := database.NewRedisClient(cfg.RedisURL)
 	if err != nil {
-		log.Printf("[Main]: Redis init failed: %v", err)
+		if isProd {
+			log.Fatalf("[Main]: Redis init failed: %v", err)
+		}
+		log.Printf("[EMERGENCY BYPASS] Redis unavailable. (Error: %v)", err)
 	}
 	if rdb != nil {
 		defer rdb.Close()
