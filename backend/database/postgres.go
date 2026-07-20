@@ -5,6 +5,7 @@ import (
 	_ "embed"
 	"fmt"
 	"log"
+	"time"
 
 	"github.com/jackc/pgx/v5/pgxpool"
 )
@@ -31,9 +32,18 @@ func NewPostgresPool(ctx context.Context, databaseURL string) (*pgxpool.Pool, er
 		return nil, fmt.Errorf("failed to create postgres pool: %w", err)
 	}
 
-	if err := pool.Ping(ctx); err != nil {
-		return nil, fmt.Errorf("failed to ping postgres: %w", err)
+	// Implement robust connection retry for serverless DB transient errors (e.g. Supabase cold starts)
+	var pingErr error
+	maxRetries := 5
+	for i := 1; i <= maxRetries; i++ {
+		if pingErr = pool.Ping(ctx); pingErr == nil {
+			return pool, nil // Success
+		}
+		log.Printf("[Database]: Ping failed (attempt %d/%d): %v. Retrying in 2 seconds...", i, maxRetries, pingErr)
+		time.Sleep(2 * time.Second)
 	}
+
+	return nil, fmt.Errorf("failed to ping postgres after %d attempts: %w", maxRetries, pingErr)
 
 	return pool, nil
 }
