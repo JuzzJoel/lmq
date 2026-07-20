@@ -133,7 +133,7 @@ func (h *ShortenHandler) HandleShorten(w http.ResponseWriter, r *http.Request) {
 			}
 		} else {
 			for i := 0; i < 5; i++ {
-				genToken, err := services.GenerateToken()
+				genToken, err := services.GenerateToken(6 + i)
 				if err != nil {
 					writeError(w, http.StatusInternalServerError, "Failed to generate token")
 					return
