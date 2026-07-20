@@ -11,10 +11,10 @@
     checkAuth();
   });
 
-  async function handleLogin(e: Event) {
+  function handleLogin(e: Event) {
     e.preventDefault();
     if (adminTokenInput.trim().length > 0) {
-      await login(adminTokenInput);
+      login(adminTokenInput);
     }
   }
 </script>

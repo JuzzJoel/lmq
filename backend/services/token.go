@@ -1,9 +1,9 @@
 package services
 
 import (
+	"crypto/rand"
 	"fmt"
-
-	gonanoid "github.com/matoous/go-nanoid/v2"
+	"math/big"
 )
 
 const (
@@ -13,14 +13,23 @@ const (
 	DefaultTokenLength = 6
 )
 
-// GenerateToken creates a short, URL-friendly random string using nanoid.
+// GenerateToken creates a short, URL-friendly random string using crypto/rand.
 func GenerateToken(length int) (string, error) {
 	if length <= 0 {
 		length = DefaultTokenLength
 	}
-	token, err := gonanoid.Generate(Alphabet, length)
-	if err != nil {
-		return "", fmt.Errorf("failed to generate token: %w", err)
+	
+	bytes := make([]byte, length)
+	alphabetLen := big.NewInt(int64(len(Alphabet)))
+	
+	for i := 0; i < length; i++ {
+		num, err := rand.Int(rand.Reader, alphabetLen)
+		if err != nil {
+			return "", fmt.Errorf("failed to generate token: %w", err)
+		}
+		bytes[i] = Alphabet[num.Int64()]
 	}
-	return token, nil
+	
+	return string(bytes), nil
 }
+
