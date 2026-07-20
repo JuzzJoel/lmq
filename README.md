@@ -7,11 +7,14 @@ LMQ is a high-performance, modular URL shortening platform utilizing a brutalist
 - **Backend API Layer:** Go, driven by the Chi router, connected to Supabase PostgreSQL, and accelerated by an ephemeral Redis cache to serve high-velocity link redirects safely under heavy network load.
 
 ## Features
-- Scalable bulk link shortening.
+- Scalable bulk link shortening (JSON and CSV upload).
 - Configurable URL expiration timestamps.
 - Hash-secured password barriers on protected links.
 - GeoIP tracking (City, Region, Country tracking).
 - **A/B testing**: weighted multi-destination routing per link.
+- **Burn-after-reading**: self-destructing one-time links.
+- **Tags/Campaigns**: organize links with labels, filterable via API.
+- **CSV analytics export**: download click data for offline analysis.
 - Dedicated administrative dashboard mapping click metrics in real-time.
 - Uncompromising minimalist design language (100% sharp-corners, high-contrast primary colors).
 
