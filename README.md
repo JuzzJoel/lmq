@@ -83,6 +83,30 @@ curl -X POST http://localhost:8080/api/v1/shorten \
 
 ---
 
+## Tags / Campaigns
+
+Every link can carry an optional list of tags for organizing and filtering links by campaign, category, or any label.
+
+**Create a link with tags:**
+```bash
+curl -X POST http://localhost:8080/api/v1/shorten \
+  -H "Content-Type: application/json" \
+  -d '{
+    "url": "https://example.com/page",
+    "tags": ["marketing", "q1-2026", "promo"]
+  }'
+```
+
+**Filter links by tag:**
+```bash
+curl -H "X-Admin-Token: your-token" \
+  "http://localhost:8080/api/v1/analytics/links?tag=promo"
+```
+
+Tags appear in the response of create, list, and analytics detail endpoints.
+
+---
+
 ## 🔥 PRODUCTION INFRASTRUCTURE TROUBLESHOOTING MATRIX
 
 If you encounter systemic operational failures during public cloud deployments, consult this matrix:

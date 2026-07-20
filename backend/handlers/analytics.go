@@ -56,9 +56,10 @@ func (h *AnalyticsHandler) HandleGetAnalytics(w http.ResponseWriter, r *http.Req
 	var totalClicks int64
 	var routesRaw []byte
 	var isBAR bool
+	var tags []string
 	err := h.pool.QueryRow(ctx,
-		"SELECT id, long_url, click_count, routes, is_burn_after_reading FROM links WHERE token = $1", token,
-	).Scan(&linkID, &longURL, &totalClicks, &routesRaw, &isBAR)
+		"SELECT id, long_url, click_count, routes, is_burn_after_reading, tags FROM links WHERE token = $1", token,
+	).Scan(&linkID, &longURL, &totalClicks, &routesRaw, &isBAR, &tags)
 	if err != nil {
 		writeError(w, http.StatusNotFound, "Link not found")
 		return
@@ -192,6 +193,7 @@ func (h *AnalyticsHandler) HandleGetAnalytics(w http.ResponseWriter, r *http.Req
 		Browsers:         browsers,
 		RecentClicks:     recentClicks,
 		BurnAfterReading: isBAR,
+		Tags:             tags,
 	}
 	if len(routesRaw) > 0 {
 		json.Unmarshal(routesRaw, &analytics.Routes)
@@ -243,9 +245,21 @@ func (h *AnalyticsHandler) HandleListLinks(w http.ResponseWriter, r *http.Reques
 	}
 
 	var rows pgx.Rows
-	if search != "" {
+	tagFilter := r.URL.Query().Get("tag")
+	if tagFilter != "" {
 		rows, err = h.pool.Query(ctx, `
-			SELECT id, token, long_url, created_at, expires_at, click_count, (password_hash IS NOT NULL), routes, is_burn_after_reading
+			SELECT id, token, long_url, created_at, expires_at, click_count, (password_hash IS NOT NULL), routes, is_burn_after_reading, tags
+			FROM links
+			WHERE $1 = ANY(tags)
+			ORDER BY created_at DESC
+			LIMIT $2 OFFSET $3
+		`, tagFilter, limit, offset)
+		if err == nil {
+			_ = h.pool.QueryRow(ctx, `SELECT COUNT(*) FROM links WHERE $1 = ANY(tags)`, tagFilter).Scan(&totalCount)
+		}
+	} else if search != "" {
+		rows, err = h.pool.Query(ctx, `
+			SELECT id, token, long_url, created_at, expires_at, click_count, (password_hash IS NOT NULL), routes, is_burn_after_reading, tags
 			FROM links
 			WHERE long_url ILIKE '%' || $1 || '%' OR token ILIKE '%' || $1 || '%'
 			ORDER BY created_at DESC
@@ -253,7 +267,7 @@ func (h *AnalyticsHandler) HandleListLinks(w http.ResponseWriter, r *http.Reques
 		`, search, limit, offset)
 	} else {
 		rows, err = h.pool.Query(ctx, `
-			SELECT id, token, long_url, created_at, expires_at, click_count, (password_hash IS NOT NULL), routes, is_burn_after_reading
+			SELECT id, token, long_url, created_at, expires_at, click_count, (password_hash IS NOT NULL), routes, is_burn_after_reading, tags
 			FROM links
 			ORDER BY created_at DESC
 			LIMIT $1 OFFSET $2

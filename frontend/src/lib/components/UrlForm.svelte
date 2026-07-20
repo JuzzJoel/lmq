@@ -11,6 +11,7 @@
   let showAbField = $state(false);
   let abRoutes = $state<{url: string; weight: number}[]>([]);
   let burnAfterReading = $state(false);
+  let tagsInput = $state('');
   
   let shortenedLinks = $state([]);
   let errorMessage = $state('');
@@ -35,7 +36,8 @@
           password: passwordLock || null,
           custom_token: showAliasField && alias ? alias : null,
           routes: showAbField && abRoutes.length > 0 ? abRoutes.filter(r => r.url.trim()) : undefined,
-          burn_after_reading: burnAfterReading || null
+          burn_after_reading: burnAfterReading || null,
+          tags: tagsInput.trim() ? tagsInput.split(',').map(t => t.trim()).filter(t => t) : undefined
         })
       });
 
@@ -175,6 +177,11 @@
         <span class="text-red-600">☠ BURN AFTER READING</span>
       </label>
     </div>
+
+    <div class="flex items-center gap-2 text-sm font-bold mt-1">
+      <span>TAGS:</span>
+      <input type="text" bind:value={tagsInput} placeholder="campaign, marketing, q1-2026" class="flex-1 bg-white border-2 border-black p-1 rounded-none outline-none text-xs" />
+    </div>
   </div>
 </form>
 
@@ -214,6 +221,13 @@
             {/if}
             {#if link.burn_after_reading}
               <span class="text-[10px] bg-red-200 border border-black px-1 py-0.5 font-bold text-red-800 mt-1 inline-block">☠ BURN AFTER READING</span>
+            {/if}
+            {#if link.tags && link.tags.length > 0}
+              <div class="flex gap-1 mt-1 flex-wrap">
+                {#each link.tags as tag}
+                  <span class="text-[10px] bg-blue-100 border border-black px-1 py-0.5 font-bold uppercase">{tag}</span>
+                {/each}
+              </div>
             {/if}
           </div>
           <div class="flex flex-col gap-2 w-full sm:w-auto shrink-0 font-mono">

@@ -127,6 +127,9 @@ func (h *ShortenHandler) HandleShorten(w http.ResponseWriter, r *http.Request) {
 			if len(req.Routes) > 0 {
 				item["routes"] = req.Routes
 			}
+			if len(req.Tags) > 0 {
+				item["tags"] = req.Tags
+			}
 			results = append(results, item)
 		}
 		writeJSON(w, http.StatusCreated, map[string]interface{}{
@@ -217,10 +220,10 @@ func (h *ShortenHandler) HandleShorten(w http.ResponseWriter, r *http.Request) {
 
 		ctx, cancel := context.WithTimeout(r.Context(), 5*time.Second)
 		err = h.pool.QueryRow(ctx, `
-			INSERT INTO links (token, long_url, expires_at, password_hash, routes, is_burn_after_reading) 
-			VALUES ($1, $2, $3, $4, $5, $6) 
-			RETURNING id, token, long_url, created_at, expires_at, click_count, (password_hash IS NOT NULL), routes, is_burn_after_reading
-		`, token, vurl, expiresAt, passwordHash, routesJSON, req.BurnAfterReading).Scan(&link.ID, &link.Token, &link.LongURL, &link.CreatedAt, &link.ExpiresAt, &link.ClickCount, &link.HasPassword, &link.Routes, &link.BurnAfterReading)
+			INSERT INTO links (token, long_url, expires_at, password_hash, routes, is_burn_after_reading, tags) 
+			VALUES ($1, $2, $3, $4, $5, $6, $7) 
+			RETURNING id, token, long_url, created_at, expires_at, click_count, (password_hash IS NOT NULL), routes, is_burn_after_reading, tags
+		`, token, vurl, expiresAt, passwordHash, routesJSON, req.BurnAfterReading, req.Tags).Scan(&link.ID, &link.Token, &link.LongURL, &link.CreatedAt, &link.ExpiresAt, &link.ClickCount, &link.HasPassword, &link.Routes, &link.BurnAfterReading, &link.Tags)
 		cancel()
 
 		if err != nil {
@@ -248,6 +251,9 @@ func (h *ShortenHandler) HandleShorten(w http.ResponseWriter, r *http.Request) {
 		}
 		if len(link.Routes) > 0 {
 			resultItem["routes"] = link.Routes
+		}
+		if len(link.Tags) > 0 {
+			resultItem["tags"] = link.Tags
 		}
 		results = append(results, resultItem)
 	}

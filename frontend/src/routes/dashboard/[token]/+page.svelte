@@ -129,6 +129,13 @@
       {#if analytics.burn_after_reading}
         <span class="text-[11px] bg-red-200 border border-black px-1 py-0.5 font-bold text-red-800 mt-1 inline-block">☠ BURN AFTER READING</span>
       {/if}
+      {#if analytics.tags && analytics.tags.length > 0}
+        <div class="flex gap-1 mt-1 flex-wrap">
+          {#each analytics.tags as tag}
+            <span class="text-[11px] bg-blue-100 border border-black px-1 py-0.5 font-bold uppercase">{tag}</span>
+          {/each}
+        </div>
+      {/if}
     </div>
     <div class="text-right border-l-4 border-black pl-6">
       <p class="text-6xl font-bold tracking-tighter">{analytics.total_clicks.toLocaleString()}</p>

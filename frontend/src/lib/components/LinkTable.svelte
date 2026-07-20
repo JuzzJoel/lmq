@@ -13,6 +13,7 @@
   const { links, totalLinks, currentPage, searchQuery, onLoadData }: Props = $props();
 
   let searchInput = $state(searchQuery);
+  let tagFilterInput = $state('');
   let activeQR = $state<number | null>(null);
 
   function formatDate(dateStr: string): string {
@@ -137,6 +138,13 @@
               {/if}
               {#if link.burn_after_reading}
                  <span title="Burn after reading" class="ml-1 text-xs">☠</span>
+              {/if}
+              {#if link.tags && link.tags.length > 0}
+                <div class="flex gap-1 mt-1 flex-wrap">
+                  {#each link.tags as tag}
+                    <span class="text-[9px] bg-blue-100 border border-black px-1 font-bold uppercase">{tag}</span>
+                  {/each}
+                </div>
               {/if}
             </td>
             <td class="px-4 py-3 max-w-xs truncate text-black font-mono text-xs border-r border-black font-bold">

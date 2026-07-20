@@ -14,6 +14,7 @@ type Link struct {
 	PasswordHash     *string     `json:"-"` // Not exported in JSON
 	BurnAfterReading bool        `json:"burn_after_reading"`
 	Routes           []RouteSpec `json:"routes,omitempty"`
+	Tags             []string    `json:"tags,omitempty"`
 }
 
 // ClickEvent represents an analytics record for a single link visit.
@@ -46,6 +47,7 @@ type ShortenRequest struct {
 	Password         string     `json:"password,omitempty"`
 	Routes           []RouteSpec `json:"routes,omitempty"`
 	BurnAfterReading bool        `json:"burn_after_reading,omitempty"`
+	Tags             []string    `json:"tags,omitempty"`
 }
 
 // APIResponse is a generic response wrapper for API responses.
@@ -67,6 +69,7 @@ type LinkAnalytics struct {
 	RecentClicks []ClickEvent   `json:"recent_clicks"`
 	Routes           []RouteSpec `json:"routes,omitempty"`
 	BurnAfterReading bool        `json:"burn_after_reading,omitempty"`
+	Tags             []string    `json:"tags,omitempty"`
 }
 
 // DayCount represents click counts grouped by day.

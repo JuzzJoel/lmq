@@ -23,7 +23,7 @@ func HandleGetDocs(w http.ResponseWriter, r *http.Request) {
 			{
 				Method:      "POST",
 				Path:        "/api/v1/shorten",
-				Description: "Create one or multiple shortened links. Payload: { url: string, routes?: [{ url: string, weight: int }], expires_in?: int, password?: string, custom_token?: string, burn_after_reading?: bool }",
+				Description: "Create one or multiple shortened links. Payload: { url: string, routes?: [{ url: string, weight: int }], expires_in?: int, password?: string, custom_token?: string, burn_after_reading?: bool, tags?: string[] }",
 			},
 			{
 				Method:      "POST",
@@ -38,7 +38,7 @@ func HandleGetDocs(w http.ResponseWriter, r *http.Request) {
 			{
 				Method:      "GET",
 				Path:        "/api/v1/analytics/links",
-				Description: "Retrieve a paginated list of all created links. Requires X-Admin-Token header.",
+				Description: "Retrieve a paginated list of all created links. Supports ?tag= filter. Requires X-Admin-Token header.",
 			},
 			{
 				Method:      "GET",

@@ -8,6 +8,7 @@ export interface Link {
   has_password?: boolean;
   routes?: RouteSpec[];
   burn_after_reading?: boolean;
+  tags?: string[];
 }
 
 export interface LinkListResponse {
@@ -41,6 +42,7 @@ export interface ShortenRequest {
   custom_token?: string;
   routes?: RouteSpec[];
   burn_after_reading?: boolean;
+  tags?: string[];
 }
 
 export interface ShortenResponse {
@@ -52,6 +54,7 @@ export interface ShortenResponse {
   expires_at?: string;
   routes?: RouteSpec[];
   burn_after_reading?: boolean;
+  tags?: string[];
 }
 
 export interface BulkShortenResponse {
@@ -77,6 +80,7 @@ export interface LinkAnalytics {
   recent_clicks: ClickEvent[];
   routes?: RouteSpec[];
   burn_after_reading?: boolean;
+  tags?: string[];
 }
 
 export interface DayCount {
