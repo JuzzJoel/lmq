@@ -96,6 +96,7 @@ func main() {
 			r.Use(appmw.AdminAuthMiddleware)
 			r.Get("/", analyticsHandler.HandleGetAnalytics)
 			r.Get("/links", analyticsHandler.HandleListLinks)
+			r.Get("/export", analyticsHandler.HandleExportAnalytics)
 		})
 	})
 

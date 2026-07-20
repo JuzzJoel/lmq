@@ -47,6 +47,11 @@ func HandleGetDocs(w http.ResponseWriter, r *http.Request) {
 			},
 			{
 				Method:      "GET",
+				Path:        "/api/v1/analytics/export",
+				Description: "Export click analytics as CSV. Supports ?token=, ?from=, ?to= filters. Requires X-Admin-Token header.",
+			},
+			{
+				Method:      "GET",
 				Path:        "/{token}",
 				Description: "Redirect to the resolved target URL. If the link has A/B routes, a weighted random route is selected; otherwise redirects to the base long_url.",
 			},

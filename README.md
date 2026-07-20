@@ -138,6 +138,30 @@ https://example.com/page2,my-alias,secret,0,false,campaign-b
 
 ---
 
+## Analytics Export
+
+Download click analytics as CSV for offline analysis.
+
+**Endpoint:** `GET /api/v1/analytics/export` (requires `X-Admin-Token` header)
+
+**Optional filters:**
+| Parameter | Description |
+|-----------|-------------|
+| `token` | Filter to a specific short link |
+| `from` | Start date (e.g. `2026-01-01`) |
+| `to` | End date (e.g. `2026-12-31`) |
+
+**Example:**
+```bash
+curl -H "X-Admin-Token: your-token" \
+  "http://localhost:8080/api/v1/analytics/export?token=AbCdEf&from=2026-01-01" \
+  -o analytics.csv
+```
+
+**CSV columns:** `token`, `long_url`, `clicked_at`, `ip_address`, `city`, `region`, `country_code`, `user_agent`, `browser`, `os`, `is_mobile`, `referer`
+
+---
+
 ## 🔥 PRODUCTION INFRASTRUCTURE TROUBLESHOOTING MATRIX
 
 If you encounter systemic operational failures during public cloud deployments, consult this matrix:

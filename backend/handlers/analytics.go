@@ -2,9 +2,12 @@ package handlers
 
 import (
 	"context"
+	"encoding/csv"
 	"encoding/json"
+	"fmt"
 	"net/http"
 	"strconv"
+	"strings"
 	"time"
 
 	"github.com/jackc/pgx/v5"
@@ -301,4 +304,86 @@ func (h *AnalyticsHandler) HandleListLinks(w http.ResponseWriter, r *http.Reques
 		"links": links,
 		"total": totalCount,
 	})
+}
+
+// HandleExportAnalytics returns click event data as CSV.
+// Endpoint: GET /api/v1/analytics/export?token=xxx&from=2026-01-01&to=2026-12-31
+func (h *AnalyticsHandler) HandleExportAnalytics(w http.ResponseWriter, r *http.Request) {
+	ctx, cancel := context.WithTimeout(r.Context(), 30*time.Second)
+	defer cancel()
+
+	tokenFilter := r.URL.Query().Get("token")
+	fromStr := r.URL.Query().Get("from")
+	toStr := r.URL.Query().Get("to")
+
+	var whereClauses []string
+	var args []interface{}
+	argIdx := 1
+
+	if tokenFilter != "" {
+		whereClauses = append(whereClauses, fmt.Sprintf("l.token = $%d", argIdx))
+		args = append(args, tokenFilter)
+		argIdx++
+	}
+	if fromStr != "" {
+		whereClauses = append(whereClauses, fmt.Sprintf("ce.clicked_at >= $%d::timestamp", argIdx))
+		args = append(args, fromStr)
+		argIdx++
+	}
+	if toStr != "" {
+		whereClauses = append(whereClauses, fmt.Sprintf("ce.clicked_at <= $%d::timestamp", argIdx))
+		args = append(args, toStr)
+		argIdx++
+	}
+
+	whereSQL := ""
+	if len(whereClauses) > 0 {
+		whereSQL = "WHERE " + strings.Join(whereClauses, " AND ")
+	}
+
+	query := fmt.Sprintf(`
+		SELECT l.token, l.long_url, ce.clicked_at, ce.ip_address, ce.city, ce.region,
+			   ce.country_code, ce.user_agent, ce.browser, ce.os, ce.is_mobile, ce.referer
+		FROM click_events ce
+		JOIN links l ON l.id = ce.link_id
+		%s
+		ORDER BY ce.clicked_at DESC
+		LIMIT 10000
+	`, whereSQL)
+
+	rows, err := h.pool.Query(ctx, query, args...)
+	if err != nil {
+		writeError(w, http.StatusInternalServerError, "Failed to query click data")
+		return
+	}
+	defer rows.Close()
+
+	w.Header().Set("Content-Type", "text/csv; charset=utf-8")
+	w.Header().Set("Content-Disposition", "attachment; filename=lmq-analytics-export.csv")
+	writer := csv.NewWriter(w)
+	defer writer.Flush()
+
+	writer.Write([]string{
+		"token", "long_url", "clicked_at", "ip_address", "city", "region",
+		"country_code", "user_agent", "browser", "os", "is_mobile", "referer",
+	})
+
+	for rows.Next() {
+		var token, longURL, clickedAt, ip, city, region, country, ua, browser, os, referer string
+		var isMobile bool
+		if err := rows.Scan(
+			&token, &longURL, &clickedAt, &ip, &city, &region,
+			&country, &ua, &browser, &os, &isMobile, &referer,
+		); err != nil {
+			continue
+		}
+		mobileStr := "false"
+		if isMobile {
+			mobileStr = "true"
+		}
+		writer.Write([]string{
+			token, longURL, clickedAt, ip, city, region,
+			country, ua, browser, os, mobileStr, referer,
+		})
+	}
 }
