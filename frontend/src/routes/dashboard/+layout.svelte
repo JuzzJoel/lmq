@@ -22,7 +22,7 @@
 {#if authState.isChecking}
   <div class="min-h-[60vh] flex items-center justify-center font-bold font-mono">LOADING...</div>
 {:else if !authState.isAuthenticated}
-  <div class="min-h-[60vh] flex items-center justify-center animate-slide-up">
+  <div class="min-h-[60vh] flex items-center justify-center animate-slide-up w-full">
     <form onsubmit={handleLogin} class="bg-white border-4 border-black shadow-[4px_4px_0px_0px_#000] p-8 w-full max-w-lg rounded-none">
       <h2 class="text-2xl font-bold uppercase tracking-widest mb-6 border-b-4 border-black pb-4 text-center">SYSTEM LOGIN</h2>
       <div class="mb-6">
@@ -51,7 +51,7 @@
     </form>
   </div>
 {:else}
-  <div class="space-y-6 animate-slide-up">
+  <div class="space-y-6 animate-slide-up w-full">
     <div class="flex flex-col sm:flex-row items-start sm:items-center justify-between pb-4 border-b-4 border-black gap-4">
       <h1 class="text-3xl font-bold uppercase tracking-tighter">Dashboard</h1>
       <nav class="flex gap-4 font-mono font-bold text-sm">
