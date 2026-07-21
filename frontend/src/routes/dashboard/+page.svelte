@@ -144,7 +144,7 @@
     {/if}
   </div>
 
-  <div>
+  <div class="mt-12">
     <h2 class="text-2xl font-bold mb-6 uppercase tracking-wider border-b-4 border-black pb-2 inline-block">YOUR LINKS</h2>
     <LinkTable 
       {links} 

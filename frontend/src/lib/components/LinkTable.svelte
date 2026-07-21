@@ -108,17 +108,16 @@
     <thead>
       <tr class="bg-bg-body border-b-2 border-black uppercase">
         <th class="text-left px-4 py-3 text-black font-bold tracking-wider w-[12%]">Token</th>
-        <th class="text-left px-4 py-3 text-black font-bold tracking-wider w-[22%]">Short Link</th>
-        <th class="text-left px-4 py-3 text-black font-bold tracking-wider w-[30%]">Destination</th>
+        <th class="text-left px-4 py-3 text-black font-bold tracking-wider w-[40%]">Destination</th>
         <th class="text-center px-4 py-3 text-black font-bold tracking-wider w-[10%]">Clicks</th>
-        <th class="text-right px-4 py-3 text-black font-bold tracking-wider w-[12%]">Created</th>
-        <th class="text-center px-4 py-3 text-black font-bold tracking-wider w-[14%]">Actions</th>
+        <th class="text-right px-4 py-3 text-black font-bold tracking-wider w-[14%]">Created</th>
+        <th class="text-center px-4 py-3 text-black font-bold tracking-wider w-[24%]">Actions</th>
       </tr>
     </thead>
     <tbody>
       {#if links.length === 0}
         <tr>
-          <td colspan="6" class="px-4 py-12 text-center text-black font-bold border-b border-black">
+          <td colspan="5" class="px-4 py-12 text-center text-black font-bold border-b border-black">
             <p class="text-lg mb-1 uppercase">No links found</p>
           </td>
         </tr>
@@ -148,10 +147,6 @@
                   {/each}
                 </div>
               {/if}
-            </td>
-            <td class="px-4 py-3 truncate border-r border-black">
-              <a href={link.short_url || (window.location.origin + '/' + link.token)} target="_blank" class="font-mono text-[11px] text-black hover:text-accent underline font-bold block truncate">{link.short_url || (window.location.origin + '/' + link.token)}</a>
-              <button type="button" onclick={() => copyToClipboard(link.short_url || (window.location.origin + '/' + link.token), link.token)} class="mt-1 text-[9px] border border-black px-1 hover:bg-warning uppercase font-bold" title="Copy short link">📋 COPY</button>
             </td>
             <td class="px-4 py-3 truncate text-black font-mono text-[11px] border-r border-black font-bold" title={link.long_url}>
               {link.long_url}

@@ -7,7 +7,7 @@
 
 <div class="min-h-screen flex flex-col bg-bg-body text-black font-sans">
   <header class="fixed top-0 left-0 right-0 z-50 bg-white border-b-4 border-black">
-    <div class="max-w-7xl mx-auto w-full px-4 sm:px-6 lg:px-8">
+    <div class="max-w-7xl 2xl:max-w-[1600px] mx-auto w-full px-4 sm:px-6 lg:px-8">
       <div class="flex items-center justify-between h-16">
         <div class="flex-shrink-0 border-r-4 border-black h-full flex items-center pr-6">
           <a href="/" class="text-3xl font-bold uppercase tracking-tighter text-black">
@@ -56,13 +56,13 @@
   </header>
 
   <main class="flex-grow pt-20 w-full">
-    <div class="max-w-7xl mx-auto w-full px-4 sm:px-6 lg:px-8 py-8">
+    <div class="max-w-7xl 2xl:max-w-[1600px] mx-auto w-full px-4 sm:px-6 lg:px-8 py-8">
       {@render children()}
     </div>
   </main>
 
   <footer class="bg-white border-t-4 border-black py-8 mt-12">
-    <div class="max-w-7xl mx-auto w-full px-4 sm:px-6 lg:px-8 flex flex-col items-center justify-center text-black font-bold uppercase text-sm space-y-2">
+    <div class="max-w-7xl 2xl:max-w-[1600px] mx-auto w-full px-4 sm:px-6 lg:px-8 flex flex-col items-center justify-center text-black font-bold uppercase text-sm space-y-2">
       <p>&copy; {new Date().getFullYear()} LMQ. ALL RIGHTS RESERVED.</p>
       <a href="https://github.com/JuzzJoel" target="_blank" rel="noopener noreferrer" class="inline-block px-3 py-1 bg-warning border-2 border-black hover:bg-black hover:text-white transition-none shadow-[2px_2px_0px_0px_#000]">
         AMANI
