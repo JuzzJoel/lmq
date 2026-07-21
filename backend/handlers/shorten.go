@@ -2,6 +2,7 @@ package handlers
 
 import (
 	"context"
+	"crypto/sha256"
 	"encoding/json"
 	"fmt"
 	"log"
@@ -9,6 +10,7 @@ import (
 	"net/url"
 	"os"
 	"regexp"
+	"sort"
 	"strings"
 	"time"
 
@@ -150,6 +152,14 @@ func (h *ShortenHandler) HandleShorten(w http.ResponseWriter, r *http.Request) {
 			vurl = "https://" + vurl
 		}
 
+		// Redis dedup: skip for custom_token (already unique by definition)
+		if h.rdb != nil && req.CustomToken == "" {
+			if cachedResult, err := h.checkDedupCache(r.Context(), vurl, req); err == nil && cachedResult != nil {
+				results = append(results, cachedResult)
+				continue
+			}
+		}
+
 		var token string
 		if req.CustomToken != "" {
 			token = req.CustomToken
@@ -262,9 +272,104 @@ func (h *ShortenHandler) HandleShorten(w http.ResponseWriter, r *http.Request) {
 			resultItem["tags"] = link.Tags
 		}
 		results = append(results, resultItem)
+
+		// Cache dedup result
+		if h.rdb != nil && req.CustomToken == "" {
+			h.setDedupCache(r.Context(), vurl, req, resultItem, expiresAt)
+		}
 	}
 
 	writeJSON(w, http.StatusCreated, map[string]interface{}{
 		"results": results,
 	})
+}
+
+// dedupKey computes a deterministic Redis key for a shorten request.
+func dedupKey(vurl string, req models.ShortenRequest) string {
+	routes := req.Routes
+	if routes == nil {
+		routes = []models.RouteSpec{}
+	}
+	sort.Slice(routes, func(i, j int) bool {
+		return routes[i].URL < routes[j].URL
+	})
+
+	tags := req.Tags
+	if tags == nil {
+		tags = []string{}
+	}
+	sorted := append([]string{}, tags...)
+	sort.Strings(sorted)
+
+	p := struct {
+		URL              string              `json:"url"`
+		ExpiresIn        int                 `json:"expires_in"`
+		Password         string              `json:"password"`
+		BurnAfterReading bool                `json:"burn_after_reading"`
+		Routes           []models.RouteSpec  `json:"routes"`
+		Tags             []string            `json:"tags"`
+	}{
+		URL:              vurl,
+		ExpiresIn:        req.ExpiresIn,
+		Password:         req.Password,
+		BurnAfterReading: req.BurnAfterReading,
+		Routes:           routes,
+		Tags:             sorted,
+	}
+
+	b, _ := json.Marshal(p)
+	h := sha256.Sum256(b)
+	return fmt.Sprintf("dedup:%x", h)
+}
+
+func (h *ShortenHandler) checkDedupCache(ctx context.Context, vurl string, req models.ShortenRequest) (map[string]interface{}, error) {
+	key := dedupKey(vurl, req)
+	data, err := h.rdb.Get(ctx, key).Bytes()
+	if err == redis.Nil {
+		return nil, nil
+	}
+	if err != nil {
+		return nil, err
+	}
+
+	var cached map[string]interface{}
+	if err := json.Unmarshal(data, &cached); err != nil {
+		return nil, err
+	}
+
+	token, ok := cached["token"].(string)
+	if !ok || token == "" {
+		return nil, nil
+	}
+
+	// Verify the token still exists in Postgres (not consumed by BAR or expired)
+	var exists bool
+	checkCtx, cancel := context.WithTimeout(ctx, 3*time.Second)
+	defer cancel()
+	if err := h.pool.QueryRow(checkCtx, "SELECT EXISTS(SELECT 1 FROM links WHERE token = $1)", token).Scan(&exists); err != nil || !exists {
+		// Token is gone — evict stale cache entry
+		h.rdb.Del(ctx, key)
+		return nil, nil
+	}
+
+	log.Printf("[dedup] cache hit for %s -> token %s", vurl, token)
+	return cached, nil
+}
+
+func (h *ShortenHandler) setDedupCache(ctx context.Context, vurl string, req models.ShortenRequest, result map[string]interface{}, expiresAt *time.Time) {
+	key := dedupKey(vurl, req)
+	data, err := json.Marshal(result)
+	if err != nil {
+		return
+	}
+
+	ttl := 72 * time.Hour
+	if expiresAt != nil {
+		remaining := time.Until(*expiresAt)
+		if remaining < ttl && remaining > 0 {
+			ttl = remaining
+		}
+	}
+
+	h.rdb.Set(ctx, key, data, ttl)
 }
