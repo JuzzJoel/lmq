@@ -5,6 +5,7 @@ import (
 	"encoding/csv"
 	"encoding/json"
 	"fmt"
+	"log"
 	"net/http"
 	"strconv"
 	"strings"
@@ -290,13 +291,15 @@ func (h *AnalyticsHandler) HandleListLinks(w http.ResponseWriter, r *http.Reques
 		var isBAR bool
 		if scanErr := rows.Scan(
 			&link.ID, &link.Token, &link.LongURL,
-			&link.CreatedAt, &link.ExpiresAt, &link.ClickCount, &link.HasPassword, &routesRaw, &isBAR,
+			&link.CreatedAt, &link.ExpiresAt, &link.ClickCount, &link.HasPassword, &routesRaw, &isBAR, &link.Tags,
 		); scanErr == nil {
 			link.BurnAfterReading = isBAR
 			if len(routesRaw) > 0 {
 				json.Unmarshal(routesRaw, &link.Routes)
 			}
 			links = append(links, link)
+		} else {
+			log.Printf("[analytics] list links scan failed: %v", scanErr)
 		}
 	}
 
