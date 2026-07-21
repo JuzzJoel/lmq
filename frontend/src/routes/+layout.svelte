@@ -22,6 +22,13 @@
             <a href="/dashboard" class="flex items-center text-black hover:bg-black hover:text-white px-6 font-bold uppercase tracking-wider border-l-4 border-black transition-none">
               DASHBOARD
             </a>
+            <a href="/help" class="flex items-center text-black hover:bg-black hover:text-white px-4 font-bold text-lg border-l-4 border-black transition-none leading-none" aria-label="Help">
+              <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="square" stroke-linejoin="miter">
+                <circle cx="12" cy="12" r="9" />
+                <path d="M9.5 9.5c0-1.4 1.1-2.5 2.5-2.5s2.5 1.1 2.5 2.5c0 1.4-1.1 2.5-2.5 2.5" />
+                <path d="M12 16v.01" />
+              </svg>
+            </a>
           </div>
         </nav>
         <div class="md:hidden">
@@ -41,7 +48,8 @@
       <div class="md:hidden bg-white border-t-4 border-black border-b-4">
         <div class="flex flex-col">
           <a href="/" class="text-black hover:bg-black hover:text-white px-4 py-3 font-bold uppercase border-b-2 border-black transition-none">HOME</a>
-          <a href="/dashboard" class="text-black hover:bg-black hover:text-white px-4 py-3 font-bold uppercase transition-none">DASHBOARD</a>
+          <a href="/dashboard" class="text-black hover:bg-black hover:text-white px-4 py-3 font-bold uppercase border-b-2 border-black transition-none">DASHBOARD</a>
+          <a href="/help" class="text-black hover:bg-black hover:text-white px-4 py-3 font-bold uppercase transition-none">HELP</a>
         </div>
       </div>
     {/if}
