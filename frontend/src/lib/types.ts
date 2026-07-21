@@ -84,6 +84,13 @@ export interface LinkAnalytics {
   tags?: string[];
 }
 
+export interface OverviewData {
+  total_clicks: number;
+  active_today: number;
+  top_country: string;
+  clicks_by_day: DayCount[];
+}
+
 export interface DayCount {
   date: string;
   count: number;

@@ -4,7 +4,7 @@
   import StatCard from '$lib/components/StatCard.svelte';
   import Chart from '$lib/components/Chart.svelte';
   import LinkTable from '$lib/components/LinkTable.svelte';
-  import { getLinks } from '$lib/api';
+  import { getLinks, getOverview } from '$lib/api';
   import type { Link } from '$lib/types';
   import { logout } from '$lib/auth.svelte';
 
@@ -19,34 +19,61 @@
   let currentPage = $state(1);
   let searchQuery = $state('');
 
-  const chartLabels = ['MON', 'TUE', 'WED', 'THU', 'FRI', 'SAT', 'SUN'];
-  const chartDatasets = [
-    {
-      label: 'CLICKS (7 DAYS)',
-      data: [120, 190, 150, 220, 180, 250, 210],
-      borderColor: '#0055FF',
-      backgroundColor: 'rgba(0, 85, 255, 0.1)',
-      fill: true,
-      tension: 0
-    }
-  ];
+  let overviewTotalClicks = $state(0);
+  let overviewActiveToday = $state(0);
+  let overviewTopCountry = $state('XX');
+  let chartLabels: string[] = $state([]);
+  let chartData: number[] = $state([]);
 
   async function loadData(page: number = 1, search: string = '') {
     loading = true;
     error = null;
-    const res = await getLinks(page, 10, search);
-    if (res.error) {
-      error = res.error;
-      if (res.error.toLowerCase().includes("unauthorized")) {
+
+    const [linksRes, overviewRes] = await Promise.all([
+      getLinks(page, 10, search),
+      getOverview()
+    ]);
+
+    if (linksRes.error) {
+      error = linksRes.error;
+      if (linksRes.error.toLowerCase().includes("unauthorized")) {
          logout();
       }
     } else {
-      links = res.data.links || [];
-      totalLinks = res.data.total || 0;
-      isMockMode = res.mock || false;
+      links = linksRes.data.links || [];
+      totalLinks = linksRes.data.total || 0;
+      isMockMode = linksRes.mock || false;
       currentPage = page;
       searchQuery = search;
     }
+
+    if (!overviewRes.error) {
+      const ov = overviewRes.data;
+      overviewTotalClicks = ov.total_clicks || 0;
+      overviewActiveToday = ov.active_today || 0;
+      overviewTopCountry = ov.top_country || 'XX';
+
+      // Build chart data: last 7 days with zero-fill for days with no clicks
+      const dayMap: Record<string, number> = {};
+      if (ov.clicks_by_day) {
+        for (const d of ov.clicks_by_day) {
+          dayMap[d.date] = d.count;
+        }
+      }
+      const labels: string[] = [];
+      const data: number[] = [];
+      const now = new Date();
+      for (let i = 6; i >= 0; i--) {
+        const d = new Date(now);
+        d.setDate(d.getDate() - i);
+        const key = d.toISOString().slice(0, 10);
+        labels.push(d.toLocaleDateString('en-US', { weekday: 'short' }).toUpperCase());
+        data.push(dayMap[key] || 0);
+      }
+      chartLabels = labels;
+      chartData = data;
+    }
+
     loading = false;
   }
 
@@ -70,11 +97,24 @@
 {#if loading && links.length === 0}
   <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-8">
     {#each Array(4) as _}
-      <div class="border-2 border-black bg-white p-6 shadow-hard h-32 animate-pulse"></div>
+      <div class="border-2 border-black bg-white p-6 shadow-hard h-32 skeleton-pulse"></div>
     {/each}
   </div>
-  <div class="border-2 border-black bg-white p-6 shadow-hard h-80 mb-8 animate-pulse"></div>
-  <div class="border-2 border-black bg-white p-6 shadow-hard h-96 animate-pulse"></div>
+  <div class="border-4 border-black bg-white p-6 shadow-hard-lg mb-12">
+    <div class="h-6 w-48 bg-gray-200 border-2 border-black mb-6 skeleton-pulse"></div>
+    <div class="h-64 w-full bg-gray-200 border-2 border-black skeleton-pulse"></div>
+  </div>
+  <div class="border-2 border-black bg-white shadow-hard">
+    <div class="h-12 bg-gray-100 border-b-2 border-black skeleton-pulse"></div>
+    {#each Array(3) as _}
+      <div class="h-16 border-b border-black flex items-center px-4 gap-4">
+        <div class="h-6 w-16 bg-gray-200 border border-black skeleton-pulse"></div>
+        <div class="h-6 w-48 bg-gray-200 border border-black skeleton-pulse"></div>
+        <div class="h-6 w-64 bg-gray-200 border border-black skeleton-pulse"></div>
+        <div class="h-6 w-12 bg-gray-200 border border-black skeleton-pulse ml-auto"></div>
+      </div>
+    {/each}
+  </div>
 {:else if error && links.length === 0}
   <div class="bg-danger border-4 border-black text-white p-8 text-center shadow-hard">
     <p class="font-bold uppercase tracking-wider mb-4 text-xl">{error}</p>
@@ -85,14 +125,23 @@
 {:else}
   <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-12">
     <StatCard label="TOTAL LINKS" value={totalLinks} icon="🔗" delay={0} />
-    <StatCard label="PAGE CLICKS" value={totalClicks} icon="🖱️" delay={100} />
-    <StatCard label="TOP COUNTRY" value={0} icon="🌍" delay={200} />
-    <StatCard label="ACTIVE TODAY" value={0} icon="🔥" delay={300} />
+    <StatCard label="PAGE CLICKS" value={overviewTotalClicks} icon="🖱️" delay={100} />
+    <StatCard label="TOP COUNTRY" value={overviewTopCountry} icon="🌍" delay={200} />
+    <StatCard label="ACTIVE TODAY" value={overviewActiveToday} icon="🔥" delay={300} />
   </div>
 
   <div class="bg-white border-4 border-black p-6 mb-12 shadow-hard-lg">
-    <h2 class="text-2xl font-bold mb-6 uppercase tracking-wider border-b-4 border-black pb-2">CLICK ACTIVITY</h2>
-    <Chart type="line" labels={chartLabels} datasets={chartDatasets} height="300px" />
+    <h2 class="text-2xl font-bold mb-6 uppercase tracking-wider border-b-4 border-black pb-2">CLICK ACTIVITY (7 DAYS)</h2>
+    <Chart type="line" labels={chartLabels} datasets={[{
+      label: 'CLICKS',
+      data: chartData,
+      borderColor: '#EAB308',
+      backgroundColor: 'rgba(234, 179, 8, 0.15)',
+      fill: true,
+    }]} height="300px" />
+    {#if chartData.length > 0 && chartData.reduce((a, b) => a + b, 0) === 0}
+      <p class="text-center text-black font-mono font-bold text-sm mt-4 border-t-4 border-black pt-4 uppercase tracking-wider">No click activity in the last 7 days — shorten a link and visit it to see data here.</p>
+    {/if}
   </div>
 
   <div>

@@ -329,6 +329,66 @@ func (h *AnalyticsHandler) HandleListLinks(w http.ResponseWriter, r *http.Reques
 	})
 }
 
+// HandleGetOverview returns aggregate click data across ALL links for the dashboard.
+// Endpoint: GET /api/v1/analytics/overview
+func (h *AnalyticsHandler) HandleGetOverview(w http.ResponseWriter, r *http.Request) {
+	ctx, cancel := context.WithTimeout(r.Context(), 5*time.Second)
+	defer cancel()
+
+	if h.pool == nil {
+		writeJSON(w, http.StatusOK, map[string]interface{}{
+			"total_clicks":  0,
+			"active_today":  0,
+			"top_country":   "XX",
+			"clicks_by_day": []models.DayCount{},
+		})
+		return
+	}
+
+	var totalClicks int64
+	h.pool.QueryRow(ctx, "SELECT COALESCE(SUM(click_count), 0) FROM links").Scan(&totalClicks)
+
+	var activeToday int64
+	h.pool.QueryRow(ctx,
+		"SELECT COUNT(*) FROM click_events WHERE clicked_at >= CURRENT_DATE",
+	).Scan(&activeToday)
+
+	var topCountry string
+	h.pool.QueryRow(ctx,
+		"SELECT country_code FROM click_events WHERE country_code != 'XX' GROUP BY country_code ORDER BY COUNT(*) DESC LIMIT 1",
+	).Scan(&topCountry)
+	if topCountry == "" {
+		topCountry = "XX"
+	}
+
+	clicksByDay := make([]models.DayCount, 0)
+	rows, err := h.pool.Query(ctx, `
+		SELECT DATE(clicked_at) AS day, COUNT(*) AS cnt
+		FROM click_events
+		WHERE clicked_at >= NOW() - INTERVAL '30 days'
+		GROUP BY day
+		ORDER BY day ASC
+	`)
+	if err == nil {
+		defer rows.Close()
+		for rows.Next() {
+			var dc models.DayCount
+			var dayTime time.Time
+			if scanErr := rows.Scan(&dayTime, &dc.Count); scanErr == nil {
+				dc.Date = dayTime.Format("2006-01-02")
+				clicksByDay = append(clicksByDay, dc)
+			}
+		}
+	}
+
+	writeJSON(w, http.StatusOK, map[string]interface{}{
+		"total_clicks":  totalClicks,
+		"active_today":  activeToday,
+		"top_country":   topCountry,
+		"clicks_by_day": clicksByDay,
+	})
+}
+
 // HandleExportAnalytics returns click event data as CSV.
 // Endpoint: GET /api/v1/analytics/export?token=xxx&from=2026-01-01&to=2026-12-31
 func (h *AnalyticsHandler) HandleExportAnalytics(w http.ResponseWriter, r *http.Request) {

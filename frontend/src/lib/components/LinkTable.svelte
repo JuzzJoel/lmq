@@ -103,15 +103,16 @@
       </div>
   </div>
 
-  <table class="w-full text-sm">
+  <div class="overflow-x-auto">
+  <table class="w-full text-sm table-fixed">
     <thead>
       <tr class="bg-bg-body border-b-2 border-black uppercase">
-        <th class="text-left px-4 py-3 text-black font-bold tracking-wider">Token</th>
-        <th class="text-left px-4 py-3 text-black font-bold tracking-wider">Short Link</th>
-        <th class="text-left px-4 py-3 text-black font-bold tracking-wider">Destination</th>
-        <th class="text-center px-4 py-3 text-black font-bold tracking-wider">Clicks</th>
-        <th class="text-right px-4 py-3 text-black font-bold tracking-wider">Created</th>
-        <th class="text-center px-4 py-3 text-black font-bold tracking-wider">Actions</th>
+        <th class="text-left px-4 py-3 text-black font-bold tracking-wider w-[12%]">Token</th>
+        <th class="text-left px-4 py-3 text-black font-bold tracking-wider w-[22%]">Short Link</th>
+        <th class="text-left px-4 py-3 text-black font-bold tracking-wider w-[30%]">Destination</th>
+        <th class="text-center px-4 py-3 text-black font-bold tracking-wider w-[10%]">Clicks</th>
+        <th class="text-right px-4 py-3 text-black font-bold tracking-wider w-[12%]">Created</th>
+        <th class="text-center px-4 py-3 text-black font-bold tracking-wider w-[14%]">Actions</th>
       </tr>
     </thead>
     <tbody>
@@ -124,57 +125,57 @@
       {:else}
         {#each links as link (link.id)}
           <tr class="border-b border-black hover:bg-warning transition-none">
-            <td class="px-4 py-3 border-r border-black relative">
+            <td class="px-4 py-3 border-r border-black relative overflow-hidden">
               <a
                 href="/dashboard/{link.token}"
-                class="font-mono text-black hover:bg-black hover:text-white px-1 font-bold uppercase transition-none"
+                class="font-mono text-black hover:bg-black hover:text-white px-1 font-bold uppercase transition-none text-xs"
               >
                 /{link.token}
               </a>
               {#if link.has_password}
-                 <span title="Password Protected" class="ml-2 text-xs">🔒</span>
+                 <span title="Password Protected" class="ml-1 text-[10px]">🔒</span>
               {/if}
               {#if link.routes && link.routes.length > 0}
-                 <span title="A/B Testing: {link.routes.length} routes" class="ml-1 text-xs">🔀</span>
+                 <span title="A/B Testing: {link.routes.length} routes" class="ml-1 text-[10px]">🔀</span>
               {/if}
               {#if link.burn_after_reading}
-                 <span title="Burn after reading" class="ml-1 text-xs">☠</span>
+                 <span title="Burn after reading" class="ml-1 text-[10px]">☠</span>
               {/if}
               {#if link.tags && link.tags.length > 0}
                 <div class="flex gap-1 mt-1 flex-wrap">
                   {#each link.tags as tag}
-                    <span class="text-[9px] bg-blue-100 border border-black px-1 font-bold uppercase">{tag}</span>
+                    <span class="text-[8px] bg-blue-100 border border-black px-1 font-bold uppercase leading-tight">{tag}</span>
                   {/each}
                 </div>
               {/if}
             </td>
-            <td class="px-4 py-3 max-w-[180px] truncate border-r border-black">
-              <a href={link.short_url || (window.location.origin + '/' + link.token)} target="_blank" class="font-mono text-xs text-black hover:text-accent underline font-bold">{link.short_url || (window.location.origin + '/' + link.token)}</a>
-              <button type="button" onclick={() => copyToClipboard(link.short_url || (window.location.origin + '/' + link.token), link.token)} class="ml-1 text-[10px] border border-black px-1 hover:bg-warning uppercase font-bold" title="Copy short link">📋</button>
+            <td class="px-4 py-3 truncate border-r border-black">
+              <a href={link.short_url || (window.location.origin + '/' + link.token)} target="_blank" class="font-mono text-[11px] text-black hover:text-accent underline font-bold block truncate">{link.short_url || (window.location.origin + '/' + link.token)}</a>
+              <button type="button" onclick={() => copyToClipboard(link.short_url || (window.location.origin + '/' + link.token), link.token)} class="mt-1 text-[9px] border border-black px-1 hover:bg-warning uppercase font-bold" title="Copy short link">📋 COPY</button>
             </td>
-            <td class="px-4 py-3 max-w-xs truncate text-black font-mono text-xs border-r border-black font-bold">
+            <td class="px-4 py-3 truncate text-black font-mono text-[11px] border-r border-black font-bold" title={link.long_url}>
               {link.long_url}
             </td>
             <td class="px-4 py-3 text-center border-r border-black">
-              <span class="inline-block px-2 py-1 border-2 border-black text-xs font-bold bg-accent text-white uppercase">
+              <span class="inline-block px-2 py-1 border-2 border-black text-[11px] font-bold bg-accent text-white uppercase leading-tight">
                 {formatNumber(link.click_count)}
               </span>
             </td>
-            <td class="px-4 py-3 text-right text-black font-bold uppercase text-xs border-r border-black">
+            <td class="px-4 py-3 text-right text-black font-bold uppercase text-[11px] border-r border-black truncate">
               {formatDate(link.created_at)}
             </td>
             <td class="px-4 py-3 text-center">
-                <div class="flex flex-col xl:flex-row gap-2 justify-center items-center">
+                <div class="flex flex-col gap-1 justify-center items-center">
                     <button type="button" onclick={() => copyToClipboard(link.short_url || (window.location.origin + '/' + link.token), link.token)} 
-                            class="w-full xl:w-auto border-4 border-black rounded-none px-3 py-2 font-mono text-xs font-bold shadow-[4px_4px_0px_0px_#000] active:translate-x-[4px] active:translate-y-[4px] active:shadow-none transition-all uppercase text-center"
+                            class="w-full border-2 border-black rounded-none px-2 py-1 font-mono text-[10px] font-bold shadow-[2px_2px_0px_0px_#000] active:translate-x-[2px] active:translate-y-[2px] active:shadow-none transition-all uppercase text-center leading-tight"
                             class:bg-warning={copiedToken === link.token}
                             class:bg-white={copiedToken !== link.token}
                             class:text-black={true}>
-                        {copiedToken === link.token ? '📋 COPIED!' : '📋 COPY SHORT LINK'}
+                        {copiedToken === link.token ? 'COPIED!' : 'COPY'}
                     </button>
                     <button type="button" onclick={() => downloadQR(link.short_url || (window.location.origin + '/' + link.token))} 
-                            class="w-full xl:w-auto bg-white text-black border-4 border-black rounded-none px-3 py-2 font-mono text-xs font-bold shadow-[4px_4px_0px_0px_#000] active:translate-x-[4px] active:translate-y-[4px] active:shadow-none transition-all hover:bg-black hover:text-white uppercase text-center whitespace-nowrap">
-                        💾 DOWNLOAD VECTOR QR
+                            class="w-full bg-white text-black border-2 border-black rounded-none px-2 py-1 font-mono text-[10px] font-bold shadow-[2px_2px_0px_0px_#000] active:translate-x-[2px] active:translate-y-[2px] active:shadow-none transition-all hover:bg-black hover:text-white uppercase text-center leading-tight">
+                        QR
                     </button>
                 </div>
             </td>
@@ -183,4 +184,5 @@
       {/if}
     </tbody>
   </table>
+  </div>
 </div>

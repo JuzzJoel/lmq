@@ -1,4 +1,4 @@
-import type { APIResponse, Link, LinkAnalytics, ShortenRequest, BulkShortenResponse } from './types';
+import type { APIResponse, Link, LinkAnalytics, OverviewData, ShortenRequest, BulkShortenResponse } from './types';
 import { env } from '$env/dynamic/public';
 
 export const API_BASE = env.PUBLIC_API_URL || '/api/v1';
@@ -36,6 +36,23 @@ export async function getAnalytics(token: string): Promise<APIResponse<LinkAnaly
     return response.json() as Promise<APIResponse<LinkAnalytics>>;
   } catch (error) {
     return { data: {} as LinkAnalytics, error: 'Network error.' };
+  }
+}
+
+/** Fetches aggregate overview data (total clicks, clicks by day, etc.) */
+export async function getOverview(): Promise<APIResponse<OverviewData>> {
+  try {
+    const response = await fetch(`${API_BASE}/analytics/overview`, {
+      headers: {
+        'X-Admin-Token': typeof sessionStorage !== 'undefined' ? sessionStorage.getItem('admin_token') || '' : ''
+      }
+    });
+    if (!response.ok) {
+        return { data: {} as OverviewData, error: 'Failed to fetch overview' };
+    }
+    return response.json() as Promise<APIResponse<OverviewData>>;
+  } catch (error) {
+    return { data: {} as OverviewData, error: 'Network error.' };
   }
 }
 

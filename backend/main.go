@@ -95,6 +95,7 @@ func main() {
 		r.Route("/analytics", func(r chi.Router) {
 			r.Use(appmw.AdminAuthMiddleware)
 			r.Get("/", analyticsHandler.HandleGetAnalytics)
+			r.Get("/overview", analyticsHandler.HandleGetOverview)
 			r.Get("/links", analyticsHandler.HandleListLinks)
 			r.Get("/export", analyticsHandler.HandleExportAnalytics)
 		})

@@ -191,7 +191,25 @@
   </div>
 {/if}
 
-{#if shortenedLinks.length === 0 && !errorMessage}
+{#if isLoading && shortenedLinks.length === 0 && !errorMessage}
+  <div class="max-w-2xl mx-auto mt-6 border-4 border-black bg-white p-6 rounded-none shadow-[4px_4px_0px_0px_#000]">
+    <div class="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
+      <div class="w-28 h-28 border-4 border-black bg-gray-200 skeleton-pulse shrink-0"></div>
+      <div class="flex-1 w-full space-y-3">
+        <div class="h-3 w-3/4 bg-gray-200 border border-black skeleton-pulse"></div>
+        <div class="h-5 w-full bg-gray-200 border border-black skeleton-pulse"></div>
+        <div class="flex gap-2">
+          <div class="h-4 w-16 bg-gray-200 border border-black skeleton-pulse"></div>
+          <div class="h-4 w-20 bg-gray-200 border border-black skeleton-pulse"></div>
+        </div>
+      </div>
+      <div class="flex flex-col gap-2 w-full sm:w-auto shrink-0">
+        <div class="h-8 w-28 bg-gray-200 border-2 border-black skeleton-pulse"></div>
+        <div class="h-8 w-28 bg-gray-200 border-2 border-black skeleton-pulse"></div>
+      </div>
+    </div>
+  </div>
+{:else if shortenedLinks.length === 0 && !errorMessage}
   <div class="max-w-2xl mx-auto mt-6 border-4 border-dashed border-gray-400 bg-gray-50 p-6 rounded-none font-mono text-center shadow-[4px_4px_0px_0px_#ccc]">
     <div class="flex flex-col items-center justify-center py-6 text-gray-400">
       <span class="text-3xl mb-2">📊</span>
