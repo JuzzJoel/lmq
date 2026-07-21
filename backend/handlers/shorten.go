@@ -4,6 +4,7 @@ import (
 	"context"
 	"encoding/json"
 	"fmt"
+	"log"
 	"net/http"
 	"net/url"
 	"os"
@@ -218,6 +219,10 @@ func (h *ShortenHandler) HandleShorten(w http.ResponseWriter, r *http.Request) {
 			routesJSON = string(rj)
 		}
 
+		if req.Tags == nil {
+			req.Tags = []string{}
+		}
+
 		ctx, cancel := context.WithTimeout(r.Context(), 5*time.Second)
 		err = h.pool.QueryRow(ctx, `
 			INSERT INTO links (token, long_url, expires_at, password_hash, routes, is_burn_after_reading, tags) 
@@ -227,6 +232,7 @@ func (h *ShortenHandler) HandleShorten(w http.ResponseWriter, r *http.Request) {
 		cancel()
 
 		if err != nil {
+			log.Printf("[shorten] DB insert failed: %v", err)
 			writeError(w, http.StatusInternalServerError, "Failed to insert link into database")
 			return
 		}

@@ -12,7 +12,7 @@ services:
       - key: ALLOWED_ORIGINS
         value: "https://lmq.name.ng"
       - key: ADMIN_SECRET_HASH
-        value: f05e4ca5135cb1a57585a0658fa9960717208ff956ce265f2991316b23b4ea6c
+        value: 2ebb0292b214a5e3ac93191f103abe949e8a257f53f79440c1eb2ac5c7a6d06b
       - key: DATABASE_URL
         sync: false
       - key: REDIS_URL
