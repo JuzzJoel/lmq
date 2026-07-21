@@ -25,8 +25,8 @@
       <h3 class="text-2xl font-bold mb-4 uppercase tracking-wider text-black">LIGHTNING FAST</h3>
       <p class="text-black font-mono font-bold text-sm">Built on Go and SvelteKit for sub-millisecond redirects and instantaneous dashboard updates.</p>
     </div>
-    <div class="p-8 border-b-4 md:border-b-0 md:border-r-4 border-black hover:bg-accent hover:text-white transition-none group">
-      <div class="w-16 h-16 bg-black flex items-center justify-center text-white mb-6 text-3xl font-bold border-2 border-black group-hover:bg-white group-hover:text-black">📊</div>
+    <div class="p-8 border-b-4 md:border-b-0 md:border-r-4 border-black hover:bg-accent hover:text-white transition-none group text-right md:text-center">
+      <div class="w-16 h-16 bg-black flex items-center justify-center text-white mb-6 text-3xl font-bold border-2 border-black group-hover:bg-white group-hover:text-black ml-auto md:mx-auto">📊</div>
       <h3 class="text-2xl font-bold mb-4 uppercase tracking-wider">ADVANCED ANALYTICS</h3>
       <p class="font-mono font-bold text-sm">Track clicks, geographic data, browsers, and devices in real-time with comprehensive charts.</p>
     </div>

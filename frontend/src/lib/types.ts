@@ -1,6 +1,7 @@
 export interface Link {
   id: number;
   token: string;
+  short_url: string;
   long_url: string;
   created_at: string;
   expires_at?: string;

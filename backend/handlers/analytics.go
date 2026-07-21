@@ -7,6 +7,7 @@ import (
 	"fmt"
 	"log"
 	"net/http"
+	"os"
 	"strconv"
 	"strings"
 	"time"
@@ -224,10 +225,14 @@ func (h *AnalyticsHandler) HandleListLinks(w http.ResponseWriter, r *http.Reques
 	offset := (page - 1) * limit
 
 	if h.pool == nil {
+		baseURL := os.Getenv("BASE_URL")
+		if baseURL == "" {
+			baseURL = "https://lmq.name.ng"
+		}
 		writeJSON(w, http.StatusOK, map[string]interface{}{
-			"links": []models.Link{
-				{ID: 1, Token: "mockB62-0", LongURL: "https://mock.link.1", CreatedAt: time.Now(), ClickCount: 150},
-				{ID: 2, Token: "mockB62-1", LongURL: "https://mock.link.2", CreatedAt: time.Now(), ClickCount: 300},
+			"links": []map[string]interface{}{
+				{"id": 1, "token": "mockB62-0", "long_url": "https://mock.link.1", "created_at": time.Now(), "click_count": 150, "short_url": fmt.Sprintf("%s/%s", baseURL, "mockB62-0")},
+				{"id": 2, "token": "mockB62-1", "long_url": "https://mock.link.2", "created_at": time.Now(), "click_count": 300, "short_url": fmt.Sprintf("%s/%s", baseURL, "mockB62-1")},
 			},
 			"total": 2,
 			"mock":  true,
@@ -303,8 +308,23 @@ func (h *AnalyticsHandler) HandleListLinks(w http.ResponseWriter, r *http.Reques
 		}
 	}
 
+	baseURL := os.Getenv("BASE_URL")
+	if baseURL == "" {
+		baseURL = "https://lmq.name.ng"
+	}
+
+	type linkWithShortURL struct {
+		models.Link
+		ShortURL string `json:"short_url"`
+	}
+
+	enriched := make([]linkWithShortURL, len(links))
+	for i, l := range links {
+		enriched[i] = linkWithShortURL{Link: l, ShortURL: fmt.Sprintf("%s/%s", baseURL, l.Token)}
+	}
+
 	writeJSON(w, http.StatusOK, map[string]interface{}{
-		"links": links,
+		"links": enriched,
 		"total": totalCount,
 	})
 }

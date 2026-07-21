@@ -107,6 +107,7 @@
     <thead>
       <tr class="bg-bg-body border-b-2 border-black uppercase">
         <th class="text-left px-4 py-3 text-black font-bold tracking-wider">Token</th>
+        <th class="text-left px-4 py-3 text-black font-bold tracking-wider">Short Link</th>
         <th class="text-left px-4 py-3 text-black font-bold tracking-wider">Destination</th>
         <th class="text-center px-4 py-3 text-black font-bold tracking-wider">Clicks</th>
         <th class="text-right px-4 py-3 text-black font-bold tracking-wider">Created</th>
@@ -116,7 +117,7 @@
     <tbody>
       {#if links.length === 0}
         <tr>
-          <td colspan="5" class="px-4 py-12 text-center text-black font-bold border-b border-black">
+          <td colspan="6" class="px-4 py-12 text-center text-black font-bold border-b border-black">
             <p class="text-lg mb-1 uppercase">No links found</p>
           </td>
         </tr>
@@ -146,6 +147,10 @@
                   {/each}
                 </div>
               {/if}
+            </td>
+            <td class="px-4 py-3 max-w-[180px] truncate border-r border-black">
+              <a href={link.short_url || (window.location.origin + '/' + link.token)} target="_blank" class="font-mono text-xs text-black hover:text-accent underline font-bold">{link.short_url || (window.location.origin + '/' + link.token)}</a>
+              <button type="button" onclick={() => copyToClipboard(link.short_url || (window.location.origin + '/' + link.token), link.token)} class="ml-1 text-[10px] border border-black px-1 hover:bg-warning uppercase font-bold" title="Copy short link">📋</button>
             </td>
             <td class="px-4 py-3 max-w-xs truncate text-black font-mono text-xs border-r border-black font-bold">
               {link.long_url}
