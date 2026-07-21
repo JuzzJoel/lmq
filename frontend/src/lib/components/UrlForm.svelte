@@ -18,13 +18,36 @@
   let isLoading = $state(false);
   let copyTargetIndex = $state(-1);
 
+  let loadingElapsed = $state(0);
+  let loadingTimer: ReturnType<typeof setInterval> | undefined = $state(undefined);
+
+  $effect(() => {
+    return () => {
+      if (loadingTimer) clearInterval(loadingTimer);
+    };
+  });
+
   async function handleSubmit(e: SubmitEvent) {
     e.preventDefault();
     if (!inputUrlValue.trim()) return;
 
     isLoading = true;
+    loadingElapsed = 0;
     errorMessage = '';
     shortenedLinks = [];
+
+    if (loadingTimer) clearInterval(loadingTimer);
+    loadingTimer = setInterval(() => {
+      loadingElapsed++;
+      if (loadingElapsed >= 90) {
+        clearInterval(loadingTimer);
+        loadingTimer = undefined;
+        if (isLoading) {
+          isLoading = false;
+          errorMessage = 'SERVER NOT RESPONDING';
+        }
+      }
+    }, 1000);
 
     try {
       const res = await fetch(`${API_BASE}/shorten`, {
@@ -41,6 +64,11 @@
         })
       });
 
+      if (loadingTimer) {
+        clearInterval(loadingTimer);
+        loadingTimer = undefined;
+      }
+
       const response = await res.json();
 
       if (res.ok) {
@@ -56,6 +84,10 @@
         errorMessage = response.error || 'Failed to shorten URLs.';
       }
     } catch (err: any) {
+      if (loadingTimer) {
+        clearInterval(loadingTimer);
+        loadingTimer = undefined;
+      }
       errorMessage = 'Network or connection error occurred.';
     } finally {
       isLoading = false;
@@ -187,11 +219,16 @@
 
 {#if errorMessage}
   <div class="max-w-2xl mx-auto mt-4 bg-red-100 border-4 border-black p-4 rounded-none font-mono font-bold text-red-600">
-    {errorMessage}
+    {errorMessage === 'SERVER NOT RESPONDING' ? 'SERVER NOT RESPONDING — the backend may be waking up from inactivity. Please try again.' : errorMessage}
   </div>
 {/if}
 
 {#if isLoading && shortenedLinks.length === 0 && !errorMessage}
+  {#if loadingElapsed >= 5}
+    <div class="max-w-2xl mx-auto mt-4 border-2 border-black bg-warning p-3 text-center font-mono font-bold uppercase text-sm skeleton-pulse">
+      {loadingElapsed >= 30 ? 'SERVER SPINNING UP...' : 'WAKING UP SERVER...'}
+    </div>
+  {/if}
   <div class="max-w-2xl mx-auto mt-6 border-4 border-black bg-white p-6 rounded-none shadow-[4px_4px_0px_0px_#000]">
     <div class="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
       <div class="w-28 h-28 border-4 border-black bg-gray-200 skeleton-pulse shrink-0"></div>

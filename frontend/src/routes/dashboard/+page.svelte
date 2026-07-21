@@ -25,14 +25,45 @@
   let chartLabels: string[] = $state([]);
   let chartData: number[] = $state([]);
 
+  let loadingElapsed = $state(0);
+  let loadingTimer: ReturnType<typeof setInterval> | undefined = $state(undefined);
+  let loadingTimedOut = $state(false);
+
+  $effect(() => {
+    return () => {
+      if (loadingTimer) clearInterval(loadingTimer);
+    };
+  });
+
   async function loadData(page: number = 1, search: string = '') {
     loading = true;
+    loadingTimedOut = false;
+    loadingElapsed = 0;
     error = null;
+
+    if (loadingTimer) clearInterval(loadingTimer);
+    loadingTimer = setInterval(() => {
+      loadingElapsed++;
+      if (loadingElapsed >= 90) {
+        clearInterval(loadingTimer);
+        loadingTimer = undefined;
+        if (loading) {
+          loadingTimedOut = true;
+          loading = false;
+          error = 'SERVER NOT RESPONDING';
+        }
+      }
+    }, 1000);
 
     const [linksRes, overviewRes] = await Promise.all([
       getLinks(page, 10, search),
       getOverview()
     ]);
+
+    if (loadingTimer) {
+      clearInterval(loadingTimer);
+      loadingTimer = undefined;
+    }
 
     if (linksRes.error) {
       error = linksRes.error;
@@ -53,7 +84,6 @@
       overviewActiveToday = ov.active_today || 0;
       overviewTopCountry = ov.top_country || 'XX';
 
-      // Build chart data: last 7 days with zero-fill for days with no clicks
       const dayMap: Record<string, number> = {};
       if (ov.clicks_by_day) {
         for (const d of ov.clicks_by_day) {
@@ -100,6 +130,11 @@
       <div class="border-2 border-black bg-white p-6 shadow-hard h-32 skeleton-pulse"></div>
     {/each}
   </div>
+  {#if loadingElapsed >= 5}
+    <div class="border-2 border-black bg-warning p-3 mb-6 text-center font-mono font-bold uppercase text-sm skeleton-pulse">
+      {loadingElapsed >= 30 ? 'SERVER SPINNING UP...' : 'WAKING UP SERVER...'}
+    </div>
+  {/if}
   <div class="border-4 border-black bg-white p-6 shadow-hard-lg mb-12">
     <div class="h-6 w-48 bg-gray-200 border-2 border-black mb-6 skeleton-pulse"></div>
     <div class="h-64 w-full bg-gray-200 border-2 border-black skeleton-pulse"></div>
@@ -118,6 +153,9 @@
 {:else if error && links.length === 0}
   <div class="bg-danger border-4 border-black text-white p-8 text-center shadow-hard">
     <p class="font-bold uppercase tracking-wider mb-4 text-xl">{error}</p>
+    {#if loadingTimedOut}
+      <p class="font-mono text-sm mb-4 opacity-80">The server took too long to respond — this can happen after a period of inactivity. Please try again.</p>
+    {/if}
     <button onclick={() => loadData(1, '')} class="px-6 py-3 bg-black hover:bg-white hover:text-black border-2 border-white hover:border-black text-white font-bold uppercase transition-none">
       RETRY
     </button>

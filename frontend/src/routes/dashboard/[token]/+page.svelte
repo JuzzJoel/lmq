@@ -13,10 +13,43 @@
   let error: string | null = $state(null);
   let isMockMode = $state(false);
 
+  let loadingElapsed = $state(0);
+  let loadingTimer: ReturnType<typeof setInterval> | undefined = $state(undefined);
+  let loadingTimedOut = $state(false);
+
+  $effect(() => {
+    return () => {
+      if (loadingTimer) clearInterval(loadingTimer);
+    };
+  });
+
   async function loadData() {
     loading = true;
+    loadingTimedOut = false;
+    loadingElapsed = 0;
     error = null;
+
+    if (loadingTimer) clearInterval(loadingTimer);
+    loadingTimer = setInterval(() => {
+      loadingElapsed++;
+      if (loadingElapsed >= 90) {
+        clearInterval(loadingTimer);
+        loadingTimer = undefined;
+        if (loading) {
+          loadingTimedOut = true;
+          loading = false;
+          error = 'SERVER NOT RESPONDING';
+        }
+      }
+    }, 1000);
+
     const res = await getAnalytics(token);
+
+    if (loadingTimer) {
+      clearInterval(loadingTimer);
+      loadingTimer = undefined;
+    }
+
     if (res.error) {
       error = res.error;
     } else {
@@ -95,16 +128,24 @@
 {/if}
 
 {#if loading}
-  <div class="border-2 border-black bg-white p-6 shadow-hard h-24 mb-8 animate-pulse"></div>
+  {#if loadingElapsed >= 5}
+    <div class="border-2 border-black bg-warning p-3 mb-6 text-center font-mono font-bold uppercase text-sm skeleton-pulse">
+      {loadingElapsed >= 30 ? 'SERVER SPINNING UP...' : 'WAKING UP SERVER...'}
+    </div>
+  {/if}
+  <div class="border-4 border-black bg-white p-6 shadow-hard-lg h-24 mb-8 skeleton-pulse"></div>
   <div class="grid grid-cols-1 md:grid-cols-3 gap-6 mb-8">
     {#each Array(3) as _}
-      <div class="border-2 border-black bg-white p-6 shadow-hard h-32 animate-pulse"></div>
+      <div class="border-2 border-black bg-white p-6 shadow-hard h-32 skeleton-pulse"></div>
     {/each}
   </div>
-  <div class="border-2 border-black bg-white p-6 shadow-hard h-80 mb-8 animate-pulse"></div>
+  <div class="border-4 border-black bg-white p-6 shadow-hard-lg h-80 mb-8 skeleton-pulse"></div>
 {:else if error || !analytics}
   <div class="bg-danger border-4 border-black text-white p-8 text-center shadow-hard">
     <p class="font-bold uppercase tracking-wider mb-4 text-xl">{error || 'DATA NOT FOUND'}</p>
+    {#if loadingTimedOut}
+      <p class="font-mono text-sm mb-4 opacity-80">The server took too long to respond — this can happen after a period of inactivity. Please try again.</p>
+    {/if}
     <button onclick={loadData} class="px-6 py-3 bg-black hover:bg-white hover:text-black border-2 border-white hover:border-black text-white font-bold uppercase transition-none">
       RETRY
     </button>
