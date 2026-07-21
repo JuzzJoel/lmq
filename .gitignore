@@ -8,6 +8,7 @@ backend/main
 backend/main-linux
 backend/*.exe
 backend/*.log
+frontend/*.log
 node_modules
 deployment.md
 deploy/
