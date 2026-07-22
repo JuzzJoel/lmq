@@ -1,7 +1,7 @@
 # LMQ - Modern URL Shortening Platform
 
 <p align="center">
-  <img src="https://raw.githubusercontent.com/JuzzJoel/joel-olajiire/master/public/covers/lmq.jpg" alt="LMQ URL Shortener Screenshot" width="800" />
+  <img src="cover.jpg" alt="LMQ URL Shortener Screenshot" width="800" />
 </p>
 
 LMQ is a high-performance, modular URL shortening platform utilizing a brutalist Bauhaus aesthetic. It provides direct, highly scalable link manipulation with deeply integrated real-time analytics, dynamic visual QR code generation, and robust IP-based rate limiting.
